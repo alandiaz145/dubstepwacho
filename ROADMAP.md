@@ -27,6 +27,7 @@ Estado al 13 de noviembre de 2026. Este documento separa lo implementado de lo q
 
 ## EP colectivo — primera edición
 
+- La estructura D1 de volúmenes y repertorios está preparada en `0005_ep_volumes.sql` (todavía no aplicada). Sólo se consultan volúmenes marcados `published` y canciones publicadas con análisis limpio. El archivo aparece en la web cuando exista una edición real.
 - Definir fecha de convocatoria, cantidad de temas, criterios, equipo que selecciona, licencias y territorios.
 - Formularios para inscribirse, enviar demo privado y confirmar créditos/licencias antes de publicar.
 - Página de cada volumen con artistas, lista de canciones, artwork y archivo de ediciones mensuales.
