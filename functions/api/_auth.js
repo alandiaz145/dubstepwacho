@@ -26,6 +26,10 @@ export const sameOrigin = request => {
   const origin=request.headers.get('Origin');
   return Boolean(origin && origin===new URL(request.url).origin);
 };
+export const pruneAuthAttempts = (db,now=Math.floor(Date.now()/1000)) =>
+  db.prepare(`DELETE FROM auth_attempts WHERE key IN (
+    SELECT key FROM auth_attempts WHERE window_start<?
+    ORDER BY window_start LIMIT 256)`).bind(now-86400).run();
 export const throttle = async (db,request,scope,maximum=6) => {
   const ip=request.headers.get('CF-Connecting-IP')||'unknown';
   const key=await digest(`${scope}:${ip}`);
@@ -35,6 +39,8 @@ export const throttle = async (db,request,scope,maximum=6) => {
     window_start=CASE WHEN window_start<? THEN excluded.window_start ELSE window_start END`)
     .bind(key,now,now-900,now-900).run();
   const row=await db.prepare('SELECT count FROM auth_attempts WHERE key=?').bind(key).first();
+  // Best-effort, bounded maintenance. Failures must not weaken the limiter.
+  if(Math.random()<1/128)try{await pruneAuthAttempts(db,now)}catch{}
   return row.count<=maximum;
 };
 export const body = async request => {
