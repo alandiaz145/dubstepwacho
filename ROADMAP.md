@@ -9,6 +9,7 @@ Estado al 13 de noviembre de 2026. Este documento separa lo implementado de lo q
 - Sesiones acotadas a 10 por usuario, con eliminación de sesiones vencidas y creación transaccional; prueba automatizada añadida.
 - Verificación externa de sólo lectura disponible con `npm run check:public`: comprueba configuración, catálogo, acceso privado e índice EP. Ejecutada correctamente; el índice EP continúa en HTTP 503 hasta aplicar la migración.
 - Las decisiones de moderación ahora revalidan estado y análisis limpio dentro de la transacción D1, y sólo auditan cambios efectivos; impide que dos moderadores pisen una transición más reciente. Prueba de conflicto añadida.
+- Pruebas adicionales con SQLite real (`node:sqlite`, Node 24) verifican que aprobación y publicación se auditen una vez, que las decisiones tardías respondan 409 y que un fallo de auditoría revierta el cambio de estado.
 - Preparado `AUTOMATION.md` con el diseño de agentes programados, ramas, pruebas, permisos mínimos y revisión. **Ninguna automatización fue activada.**
 - Prueba externa confirmada: la interfaz administrativa más reciente se desplegó en `dubstepwacho.pages.dev` y `/api/eps/` devolvía HTTP 503 por migración aún pendiente. Las APIs de cuentas permanecen cerradas.
 - Bloqueos sin eludir: migraciones D1 `0003`–`0005` (acceso Cloudflare), Turnstile y correo real, escáner privado de MP3, reglas del EP, prueba física Safari iPhone y decisiones de cobro.
