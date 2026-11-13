@@ -15,3 +15,4 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - Music player should act like continuous, ad-free radio when authorized audio is published: skip visual demos, advance automatically and offer a queue. Never fake playback. Verify scrubbing on iPhone Safari before release.
 - Future concepts: moderated per-track feedback, regional artist map, official WhatsApp community, donations with transparent hosting costs, producer marketplace with clear licenses and commissions.
 - Keep registration and uploads off until abuse prevention, email verification, malware scanning, moderation and public streaming access are tested. Do not activate paid services without authorization.
+- Registration client and server have Turnstile scaffolding. The public sitekey comes from `/api/auth/config`; registration is disabled unless the auth flag and both keys exist. Do not set those flags until email ownership and account lifecycle are implemented.
