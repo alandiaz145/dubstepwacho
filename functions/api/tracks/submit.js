@@ -9,6 +9,7 @@ export async function onRequestPost({request,env}) {
   if(originError) return originError;
   const {user,error}=await requireUser(request,env,'artist');
   if(error) return error;
+  if(env.UPLOADS_ENABLED!=='true') return response({error:'La recepción de música está pendiente de habilitación.'},503);
   if(!env.PRIVATE_MUSIC?.put) return response({error:'La recepción segura de música aún no está configurada.'},503);
   const size=Number(request.headers.get('content-length'));
   if(!Number.isSafeInteger(size)||size<1||size>MAX_MP3+MAX_COVER+65536) return response({error:'La carga supera el tamaño permitido.'},413);
