@@ -17,9 +17,16 @@ export async function onRequestPost({request,env}) {
   const {hash,salt}=await hashPassword(password);
   try {
     const results=await env.DB.batch([
-      env.DB.prepare('UPDATE users SET password_hash=?,password_salt=? WHERE id=? AND email_verified_at IS NOT NULL').bind(hash,salt,row.user_id),
-      env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(row.user_id),
-      env.DB.prepare('DELETE FROM password_resets WHERE user_id=?').bind(row.user_id)
+      // Recheck the still-live token inside the transaction: concurrent resets
+      // that observed the same token must not both change the password.
+      env.DB.prepare(`UPDATE users SET password_hash=?,password_salt=?
+        WHERE id=? AND email_verified_at IS NOT NULL AND EXISTS (
+          SELECT 1 FROM password_resets WHERE user_id=? AND token_hash=? AND expires_at>?)`)
+        .bind(hash,salt,row.user_id,row.user_id,await hashEmailToken(token),Math.floor(Date.now()/1000)),
+      env.DB.prepare(`DELETE FROM sessions WHERE user_id=? AND EXISTS (
+        SELECT 1 FROM password_resets WHERE user_id=? AND token_hash=? AND expires_at>?)`)
+        .bind(row.user_id,row.user_id,await hashEmailToken(token),Math.floor(Date.now()/1000)),
+      env.DB.prepare('DELETE FROM password_resets WHERE user_id=? AND token_hash=?').bind(row.user_id,await hashEmailToken(token))
     ]);
     if(!results[0].meta?.changes)return response({error:'No se pudo cambiar la contraseña.'},409);
     return response({message:'Contraseña actualizada. Ingresá nuevamente.'});
