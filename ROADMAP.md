@@ -15,7 +15,8 @@ Estado al 13 de noviembre de 2026. Este documento separa lo implementado de lo q
 - Preparado `AUTOMATION.md` con el diseño de agentes programados, ramas, pruebas, permisos mínimos y revisión. **Ninguna automatización fue activada.**
 - Prueba externa confirmada: la interfaz administrativa más reciente se desplegó en `dubstepwacho.pages.dev` y `/api/eps/` devolvía HTTP 503 por migración aún pendiente. Las APIs de cuentas permanecen cerradas.
 - Bloqueos sin eludir: migraciones D1 `0003`–`0005` (acceso Cloudflare), Turnstile y correo real, escáner privado de MP3, reglas del EP, prueba física Safari iPhone y decisiones de cobro.
-- Próxima tarea independiente recomendada: preparar una prueba controlada de límites de solicitudes y sesiones con D1 local, y continuar auditando accesibilidad del reproductor. Próxima tarea externa bloqueada: instalar las migraciones `0003`–`0005` y verificar los bindings de Cloudflare antes de habilitar cualquier función privada.
+- Pruebas de SQLite real para límites por IP/operación, reinicio de ventana de 15 minutos, aislamiento entre usuarios y máximo de diez sesiones; sin ataques ni tráfico de carga contra producción.
+- Próxima tarea independiente recomendada: revisar acumulación y mantenimiento de registros `auth_attempts`, y continuar auditando accesibilidad del reproductor. Próxima tarea externa bloqueada: instalar las migraciones `0003`–`0005` y verificar los bindings de Cloudflare antes de habilitar cualquier función privada.
 
 ## Base pública (implementada)
 
