@@ -22,9 +22,12 @@ La activación pública del registro requiere además revisar limitación de bot
 1. Crear una base Cloudflare D1 específica para DubstepWacho, sin reutilizar la de Allen KS.
 2. Aplicar `migrations/0001_auth.sql` a esa base.
 3. Asociar esa D1 al proyecto Pages con nombre de binding `DB`, en producción y vistas previas cuando corresponda.
-4. Completar protección anti-bots, verificación de correo, recuperación de contraseña y pruebas de permisos antes de habilitar registro real para visitantes.
+4. Completar protección anti-bots, verificación de correo, recuperación de contraseña y pruebas de permisos antes de habilitar registro real para visitantes. Solo entonces agregar la variable `AUTH_ENABLED=true`.
+5. Crear un bucket R2 privado separado con binding `PRIVATE_MUSIC`. La recepción seguirá bloqueada hasta asignar `UPLOADS_ENABLED=true`, únicamente después de verificar el análisis automático, los límites de cuota y el sistema de moderación.
 
 Los endpoints se encuentran en `functions/api/auth/`; las contraseñas se derivan con PBKDF2 SHA-256 y sal aleatoria, y la sesión se conserva en una cookie HttpOnly, Secure y SameSite=Lax. El rol administrador nunca se puede seleccionar en el registro público.
+
+La segunda migración `migrations/0002_tracks.sql` agrega canciones en cuarentena, estado de análisis, decisiones y auditoría. Las funciones `functions/api/tracks/submit.js` y `functions/api/admin/` son la base de recepción y revisión; **no incluyen aún un motor antivirus ni publicación de canciones**. Por seguridad, aprobar una canción exige un resultado `clean` y estado `pending_review`; no existe por ahora una acción pública que marque archivos como limpios.
 
 Los lanzamientos y artistas precargados son ejemplos ficticios; no tienen MP3 reproducibles. La portada de *Raíz Bass Vol. I* es arte conceptual creado para el prototipo.
 
