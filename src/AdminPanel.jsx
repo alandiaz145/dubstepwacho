@@ -1,17 +1,23 @@
 import React,{useCallback,useEffect,useState} from 'react';
 
 const labels={pending_analysis:'En análisis',pending_review:'Pendiente de revisión',approved:'Aprobado',published:'Publicado',rejected:'Rechazado',withdrawn:'Retirado'};
+const actionLabels={approve:'Aprobación',reject:'Rechazo',request_changes:'Cambios solicitados',publish:'Publicación',withdraw:'Retirada'};
 
 export default function AdminPanel({account}) {
-  const [tracks,setTracks]=useState([]),[loading,setLoading]=useState(false),[busy,setBusy]=useState(''),[message,setMessage]=useState('');
+  const [tracks,setTracks]=useState([]),[events,setEvents]=useState([]),[loading,setLoading]=useState(false),[busy,setBusy]=useState(''),[message,setMessage]=useState('');
   const refresh=useCallback(async()=>{
     if(account?.role!=='admin')return;
     setLoading(true);
     try {
-      const result=await fetch('/api/admin/tracks',{credentials:'same-origin'});
-      const data=await result.json();
-      if(!result.ok)throw Error(data.error||'No se pudo cargar la moderación.');
-      setTracks(Array.isArray(data.tracks)?data.tracks:[]);
+      const [trackResult,historyResult]=await Promise.all([
+        fetch('/api/admin/tracks',{credentials:'same-origin'}),
+        fetch('/api/admin/history',{credentials:'same-origin'})
+      ]);
+      const [trackData,historyData]=await Promise.all([trackResult.json(),historyResult.json()]);
+      if(!trackResult.ok)throw Error(trackData.error||'No se pudo cargar la moderación.');
+      setTracks(Array.isArray(trackData.tracks)?trackData.tracks:[]);
+      if(!historyResult.ok)throw Error(historyData.error||'No se pudo cargar el historial.');
+      setEvents(Array.isArray(historyData.events)?historyData.events:[]);
     }catch(error){setMessage(error.message)}finally{setLoading(false)}
   },[account?.role]);
   useEffect(()=>{refresh()},[refresh]);
@@ -47,5 +53,13 @@ export default function AdminPanel({account}) {
         {track.status==='published'&&<button disabled={!!busy} onClick={()=>act(track,'withdraw')}>Retirar</button>}
       </div>
     </article>):<p>{loading?'Cargando registros…':'Todavía no hay canciones para moderar.'}</p>}
+    <section className="admin-history" aria-label="Historial de moderación">
+      <h2>ÚLTIMAS DECISIONES</h2>
+      {events.length?events.map((event,index)=><article key={`${event.createdAt}-${index}`}>
+        <strong>{actionLabels[event.action]||event.action}: {event.trackTitle}</strong>
+        <small>{event.artistName} · {event.actorName} · {event.createdAt}</small>
+        {event.reason&&<p>Motivo: {event.reason}</p>}
+      </article>):<p>Todavía no hay decisiones registradas.</p>}
+    </section>
   </main>;
 }
