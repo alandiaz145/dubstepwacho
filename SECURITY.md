@@ -10,6 +10,7 @@
 - La confirmación de correo y el cambio de contraseña verifican de nuevo, dentro de su transacción D1, que el token todavía exista y no esté vencido. Esto reduce el riesgo de reutilización en solicitudes simultáneas; requiere prueba integral en la base real antes de habilitar cuentas.
 - Las sesiones nuevas se crean en una transacción que elimina sesiones vencidas del usuario y conserva como máximo 10 sesiones activas por cuenta. El inicio de sesión adicional puede cerrar una sesión antigua; falta comprobarlo con D1 real.
 - SQLite local confirmó límites por IP y operación, renovación de ventana de 15 minutos, separación de usuarios y poda de sesiones a diez. Esto verifica las consultas SQL, no constituye un ensayo de carga contra Cloudflare.
+- Los contadores `auth_attempts` más antiguos que 24 horas se limpian de forma oportunista, con muestreo y lotes máximos de 256; la limpieza es de mejor esfuerzo y nunca sustituye el bloqueo de intentos. La migración aditiva `0006_auth_attempts_maintenance.sql` crea un índice temporal para evitar consultas costosas a medida que crezca la tabla; sigue pendiente de aplicar en D1.
 - `UPLOADS_ENABLED` no está activado: no se reciben MP3 de usuarios.
 - Los archivos futuros se guardan en `PRIVATE_MUSIC`, dentro de `quarantine/`, sin acceso público directo a R2.
 - Se limita el tamaño a 10 MiB por MP3 y 3 MiB por portada, con control de firma inicial, cantidad de envíos, origen y derechos declarados.
