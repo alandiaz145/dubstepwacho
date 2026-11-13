@@ -46,3 +46,21 @@ test('moderation cannot approve a track before a clean malware scan',async()=>{
     assert.match((await result.json()).error,/falta análisis limpio/);
   }
 });
+test('moderation rechecks current track state inside the audit transaction',async()=>{
+  const origin='https://dubstepwacho.pages.dev',id='11111111-1111-4111-8111-111111111111';
+  let statements=[];
+  const env={AUTH_ENABLED:'true',DB:{
+    prepare(sql){return {bind(...args){return {sql,args,async first(){
+      if(sql.includes('FROM sessions'))return {id:'admin-1',role:'admin'};
+      if(sql.includes('FROM tracks'))return {scan_status:'clean',status:'pending_review'};
+    }}}}},
+    async batch(batch){statements=batch;return [{meta:{changes:0}},{meta:{changes:0}}]}
+  }};
+  const req=new Request(`${origin}/api/admin/review`,{method:'POST',headers:{Origin:origin,
+    Cookie:`dw_session=${'a'.repeat(64)}`,'Content-Type':'application/json'},
+    body:JSON.stringify({id,action:'approve'})});
+  const result=await review({request:req,env});
+  assert.equal(result.status,409);
+  assert.match(statements[0].sql,/status='pending_review' AND scan_status='clean'/);
+  assert.match(statements[1].sql,/changes\(\)>0/);
+});
