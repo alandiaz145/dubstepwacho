@@ -14,8 +14,12 @@ export async function onRequestPost({request,env}) {
   if(!row)return response({error:'Enlace inválido o vencido.'},400);
   try {
     const changes=await env.DB.batch([
-      env.DB.prepare('UPDATE users SET email_verified_at=CURRENT_TIMESTAMP WHERE id=? AND email_verified_at IS NULL').bind(row.user_id),
-      env.DB.prepare('DELETE FROM email_verifications WHERE user_id=?').bind(row.user_id)
+      env.DB.prepare(`UPDATE users SET email_verified_at=CURRENT_TIMESTAMP
+        WHERE id=? AND email_verified_at IS NULL AND EXISTS (
+          SELECT 1 FROM email_verifications WHERE user_id=? AND token_hash=? AND expires_at>?)`)
+        .bind(row.user_id,row.user_id,await hashEmailToken(token),Math.floor(Date.now()/1000)),
+      env.DB.prepare('DELETE FROM email_verifications WHERE user_id=? AND token_hash=?')
+        .bind(row.user_id,await hashEmailToken(token))
     ]);
     if(!changes[0].meta?.changes)return response({error:'Enlace ya utilizado.'},409);
     return response({message:'Correo confirmado. Ya podés ingresar.'});
