@@ -1,0 +1,47 @@
+const validId=id=>/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(id||'');
+
+export function parseByteRange(header,size) {
+  if (!header) return null;
+  if (!/^bytes=\d*-\d*$/.test(header)) return false;
+  const [startText,endText]=header.slice(6).split('-');
+  if(!startText&&!endText)return false;
+  let start,end;
+  if(!startText){
+    const suffix=Number(endText);
+    if(!Number.isSafeInteger(suffix)||suffix<1)return false;
+    start=Math.max(0,size-suffix);end=size-1;
+  }else{
+    start=Number(startText);end=endText?Number(endText):size-1;
+    if(!Number.isSafeInteger(start)||!Number.isSafeInteger(end)||start>=size||end<start)return false;
+    end=Math.min(end,size-1);
+  }
+  return {offset:start,length:end-start+1,start,end};
+}
+
+export async function onRequestGet({request,env,params}) {
+  if(!validId(params?.id))return new Response('Not found',{status:404});
+  if(!env?.DB?.prepare||!env?.PRIVATE_MUSIC?.get)return new Response('Unavailable',{status:503});
+  const track=await env.DB.prepare(`SELECT audio_key FROM tracks WHERE id=?
+    AND status='published' AND scan_status='clean'`).bind(params.id).first();
+  if(!track)return new Response('Not found',{status:404});
+  const head=await env.PRIVATE_MUSIC.head(track.audio_key);
+  if(!head||!Number.isSafeInteger(head.size)||head.size<1)return new Response('Not found',{status:404});
+  const range=parseByteRange(request.headers.get('Range'),head.size);
+  const headers=new Headers({
+    'Content-Type':'audio/mpeg',
+    'Accept-Ranges':'bytes',
+    'Cache-Control':'public, max-age=300',
+    'X-Content-Type-Options':'nosniff'
+  });
+  if(range===false){headers.set('Content-Range',`bytes */${head.size}`);return new Response(null,{status:416,headers});}
+  const object=await env.PRIVATE_MUSIC.get(track.audio_key,range?{range:{offset:range.offset,length:range.length}}:{});
+  if(!object?.body)return new Response('Not found',{status:404});
+  headers.set('Content-Length',String(range?range.length:head.size));
+  if(range)headers.set('Content-Range',`bytes ${range.start}-${range.end}/${head.size}`);
+  return new Response(object.body,{status:range?206:200,headers});
+}
+
+export async function onRequestHead(context) {
+  const response=await onRequestGet(context);
+  return new Response(null,{status:response.status,headers:response.headers});
+}
