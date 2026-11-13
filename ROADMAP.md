@@ -16,7 +16,8 @@ Estado al 13 de noviembre de 2026. Este documento separa lo implementado de lo q
 - Prueba externa confirmada: la interfaz administrativa más reciente se desplegó en `dubstepwacho.pages.dev` y `/api/eps/` devolvía HTTP 503 por migración aún pendiente. Las APIs de cuentas permanecen cerradas.
 - Bloqueos sin eludir: migraciones D1 `0003`–`0005` (acceso Cloudflare), Turnstile y correo real, escáner privado de MP3, reglas del EP, prueba física Safari iPhone y decisiones de cobro.
 - Pruebas de SQLite real para límites por IP/operación, reinicio de ventana de 15 minutos, aislamiento entre usuarios y máximo de diez sesiones; sin ataques ni tráfico de carga contra producción.
-- Próxima tarea independiente recomendada: revisar acumulación y mantenimiento de registros `auth_attempts`, y continuar auditando accesibilidad del reproductor. Próxima tarea externa bloqueada: instalar las migraciones `0003`–`0005` y verificar los bindings de Cloudflare antes de habilitar cualquier función privada.
+- Limpieza incremental y acotada (256 registros antiguos por ejecución muestreada) de `auth_attempts` preparada, con índice en migración `0006_auth_attempts_maintenance.sql` y prueba local SQLite. Falta aplicar también `0006` antes de abrir cuentas.
+- Próxima tarea independiente recomendada: continuar pruebas de accesibilidad y recuperación de errores del reproductor; verificar que las respuestas públicas no revelen datos privados. Próxima tarea externa bloqueada: instalar las migraciones `0003`–`0006` y verificar los bindings de Cloudflare antes de habilitar cualquier función privada.
 
 ## Base pública (implementada)
 
