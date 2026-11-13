@@ -5,6 +5,7 @@
 - `AUTH_ENABLED` no está activado: no se admiten registros ni sesiones públicas.
 - El registro exige `TURNSTILE_SECRET_KEY` y verifica cada token contra Siteverify, con comprobación de hostname. Si falta el token, venció, falla la red o no hay credencial, el servidor rechaza el registro. Esta barrera no habilita las cuentas por sí sola.
 - El formulario de registro consulta `/api/auth/config` para obtener únicamente la clave pública `TURNSTILE_SITE_KEY`. La clave secreta nunca se entrega al navegador. El botón de registro permanece bloqueado hasta recibir un token de desafío; si falla el envío, debe resolverse uno nuevo.
+- Los nuevos registros generan un token aleatorio SHA-256 almacenado sólo como hash en D1 (`0003_email_verification.sql`); no crean sesión hasta confirmar el correo. El enlace vence a la hora y el endpoint de verificación consume el token. El envío transaccional es una integración opcional con Resend que requiere `RESEND_API_KEY` y `VERIFICATION_EMAIL_FROM`; no se configuró ni activó ninguna cuenta de correo.
 - `UPLOADS_ENABLED` no está activado: no se reciben MP3 de usuarios.
 - Los archivos futuros se guardan en `PRIVATE_MUSIC`, dentro de `quarantine/`, sin acceso público directo a R2.
 - Se limita el tamaño a 10 MiB por MP3 y 3 MiB por portada, con control de firma inicial, cantidad de envíos, origen y derechos declarados.
@@ -32,7 +33,7 @@ No usar automáticamente el API público de VirusTotal: sus condiciones restring
 
 ## Condiciones de lanzamiento
 
-- Crear el widget Turnstile del dominio real, configurar su clave secreta como secreto de Cloudflare (jamás en GitHub), integrar el widget y su token en el formulario, y probar el flujo completo antes de activar `AUTH_ENABLED`. `TURNSTILE_TEST_MODE` se reserva para pruebas aisladas con claves de prueba; debe permanecer ausente en producción.
+- Crear el widget Turnstile del dominio real, configurar su clave secreta como secreto de Cloudflare (jamás en GitHub), e instalar `0003_email_verification.sql` en D1. Elegir/verificar remitente transaccional y configurar secretos, probar un registro real desde el email hasta el login y recién entonces considerar `AUTH_ENABLED`. `TURNSTILE_TEST_MODE` se reserva para pruebas aisladas con claves de prueba; debe permanecer ausente en producción.
 - Integración real de análisis de malware y pruebas con archivos limpios, corruptos y el archivo de prueba EICAR (sin almacenar ni publicar material malicioso).
 - Verificación de correo, protección anti-bots y recuperación de cuenta.
 - Pruebas de control de acceso (usuarios, artistas y administradores) y de moderación, incluidos intentos de aprobación antes del resultado limpio.
