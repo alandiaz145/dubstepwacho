@@ -18,7 +18,7 @@ export function parseByteRange(header,size) {
   return {offset:start,length:end-start+1,start,end};
 }
 
-export async function onRequestGet({request,env,params}) {
+async function serveAudio({request,env,params},headOnly=false) {
   if(!validId(params?.id))return new Response('Not found',{status:404});
   if(!env?.DB?.prepare||!env?.PRIVATE_MUSIC?.get)return new Response('Unavailable',{status:503});
   const track=await env.DB.prepare(`SELECT audio_key FROM tracks WHERE id=?
@@ -34,14 +34,13 @@ export async function onRequestGet({request,env,params}) {
     'X-Content-Type-Options':'nosniff'
   });
   if(range===false){headers.set('Content-Range',`bytes */${head.size}`);return new Response(null,{status:416,headers});}
-  const object=await env.PRIVATE_MUSIC.get(track.audio_key,range?{range:{offset:range.offset,length:range.length}}:{});
-  if(!object?.body)return new Response('Not found',{status:404});
   headers.set('Content-Length',String(range?range.length:head.size));
   if(range)headers.set('Content-Range',`bytes ${range.start}-${range.end}/${head.size}`);
+  if(headOnly)return new Response(null,{status:range?206:200,headers});
+  const object=await env.PRIVATE_MUSIC.get(track.audio_key,range?{range:{offset:range.offset,length:range.length}}:{});
+  if(!object?.body)return new Response('Not found',{status:404});
   return new Response(object.body,{status:range?206:200,headers});
 }
 
-export async function onRequestHead(context) {
-  const response=await onRequestGet(context);
-  return new Response(null,{status:response.status,headers:response.headers});
-}
+export const onRequestGet=context=>serveAudio(context);
+export const onRequestHead=context=>serveAudio(context,true);
