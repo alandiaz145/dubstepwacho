@@ -76,3 +76,24 @@ export const invalidateSession = async (request,db) => {
 };
 export const slugify = name => name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,48);
 export const validEmail = value => typeof value === 'string' && value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+// Registration must never trust a client-supplied challenge token without Siteverify.
+// Missing credentials and verification errors deny registration (fail closed).
+export const verifyTurnstile = async (env, token, request, verify = fetch) => {
+  if (typeof env?.TURNSTILE_SECRET_KEY !== 'string' || !env.TURNSTILE_SECRET_KEY ||
+      typeof token !== 'string' || !token || token.length > 2048) return false;
+  try {
+    const data = new URLSearchParams({secret:env.TURNSTILE_SECRET_KEY,response:token});
+    const ip = request.headers.get('CF-Connecting-IP');
+    if (ip) data.set('remoteip', ip);
+    const result = await verify('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method:'POST',body:data,signal:AbortSignal.timeout(5000)
+    });
+    if (!result.ok) return false;
+    const verdict = await result.json();
+    // Cloudflare's test credentials deliberately return example.com.
+    return verdict?.success === true &&
+      (verdict.hostname === new URL(request.url).hostname ||
+       (env.TURNSTILE_TEST_MODE === 'true' && verdict.hostname === 'example.com'));
+  } catch { return false; }
+};
