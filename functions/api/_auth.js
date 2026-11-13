@@ -20,7 +20,8 @@ export const response = (data, status = 200, extra = {}) => Response.json(data, 
   headers: {'Cache-Control':'no-store', 'X-Content-Type-Options':'nosniff', ...extra}
 });
 export const unavailable = () => response({error:'El servicio de cuentas todavía no está habilitado.'}, 503);
-export const ready = env => Boolean(env?.DB?.prepare);
+// A D1 binding alone must never open public registration by accident.
+export const ready = env => Boolean(env?.DB?.prepare && env?.AUTH_ENABLED === 'true');
 export const sameOrigin = request => {
   const origin=request.headers.get('Origin');
   return Boolean(origin && origin===new URL(request.url).origin);
