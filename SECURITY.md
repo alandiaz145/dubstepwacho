@@ -4,6 +4,7 @@
 
 - `AUTH_ENABLED` no está activado: no se admiten registros ni sesiones públicas.
 - El registro exige `TURNSTILE_SECRET_KEY` y verifica cada token contra Siteverify, con comprobación de hostname. Si falta el token, venció, falla la red o no hay credencial, el servidor rechaza el registro. Esta barrera no habilita las cuentas por sí sola.
+- El formulario de registro consulta `/api/auth/config` para obtener únicamente la clave pública `TURNSTILE_SITE_KEY`. La clave secreta nunca se entrega al navegador. El botón de registro permanece bloqueado hasta recibir un token de desafío; si falla el envío, debe resolverse uno nuevo.
 - `UPLOADS_ENABLED` no está activado: no se reciben MP3 de usuarios.
 - Los archivos futuros se guardan en `PRIVATE_MUSIC`, dentro de `quarantine/`, sin acceso público directo a R2.
 - Se limita el tamaño a 10 MiB por MP3 y 3 MiB por portada, con control de firma inicial, cantidad de envíos, origen y derechos declarados.
