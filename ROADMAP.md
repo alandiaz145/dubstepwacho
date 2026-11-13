@@ -11,6 +11,7 @@ Estado al 13 de noviembre de 2026. Este documento separa lo implementado de lo q
 - Las decisiones de moderación ahora revalidan estado y análisis limpio dentro de la transacción D1, y sólo auditan cambios efectivos; impide que dos moderadores pisen una transición más reciente. Prueba de conflicto añadida.
 - Pruebas adicionales con SQLite real (`node:sqlite`, Node 24) verifican que aprobación y publicación se auditen una vez, que las decisiones tardías respondan 409 y que un fallo de auditoría revierta el cambio de estado.
 - Evitada una carrera de interfaz en el archivo EP: al cambiar rápidamente de volumen, sólo la última consulta puede actualizar las canciones visibles. Pendiente de prueba con volúmenes públicos reales después de aplicar `0005`.
+- Mejoradas etiquetas accesibles del menú, navegación activa, controles de transporte, repetición, cola y expansión del reproductor. Falta una auditoría manual con lector de pantalla y Safari iPhone.
 - Preparado `AUTOMATION.md` con el diseño de agentes programados, ramas, pruebas, permisos mínimos y revisión. **Ninguna automatización fue activada.**
 - Prueba externa confirmada: la interfaz administrativa más reciente se desplegó en `dubstepwacho.pages.dev` y `/api/eps/` devolvía HTTP 503 por migración aún pendiente. Las APIs de cuentas permanecen cerradas.
 - Bloqueos sin eludir: migraciones D1 `0003`–`0005` (acceso Cloudflare), Turnstile y correo real, escáner privado de MP3, reglas del EP, prueba física Safari iPhone y decisiones de cobro.
