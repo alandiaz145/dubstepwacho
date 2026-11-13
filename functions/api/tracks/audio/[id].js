@@ -20,10 +20,10 @@ export function parseByteRange(header,size) {
 
 async function serveAudio({request,env,params},headOnly=false) {
   if(!validId(params?.id))return new Response('Not found',{status:404});
-  if(!env?.DB?.prepare||!env?.PRIVATE_MUSIC?.get)return new Response('Unavailable',{status:503});
+  if(!env?.DB?.prepare||!env?.PRIVATE_MUSIC?.get||!env?.PRIVATE_MUSIC?.head)return new Response('Unavailable',{status:503});
   const track=await env.DB.prepare(`SELECT audio_key FROM tracks WHERE id=?
     AND status='published' AND scan_status='clean'`).bind(params.id).first();
-  if(!track)return new Response('Not found',{status:404});
+  if(!track?.audio_key)return new Response('Not found',{status:404});
   const head=await env.PRIVATE_MUSIC.head(track.audio_key);
   if(!head||!Number.isSafeInteger(head.size)||head.size<1)return new Response('Not found',{status:404});
   const range=parseByteRange(request.headers.get('Range'),head.size);
