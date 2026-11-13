@@ -5,7 +5,7 @@ export async function onRequestGet({env,params}) {
   if(!env?.DB?.prepare||!env?.PRIVATE_MUSIC?.get)return new Response('Unavailable',{status:503});
   const track=await env.DB.prepare(`SELECT cover_key FROM tracks WHERE id=?
     AND status='published' AND scan_status='clean'`).bind(params.id).first();
-  if(!track)return new Response('Not found',{status:404});
+  if(!track?.cover_key)return new Response('Not found',{status:404});
   const cover=await env.PRIVATE_MUSIC.get(track.cover_key);
   if(!cover?.body)return new Response('Not found',{status:404});
   return new Response(cover.body,{headers:{
