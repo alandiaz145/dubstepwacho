@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {webcrypto} from 'node:crypto';
 import {DatabaseSync} from 'node:sqlite';
-import {createSession,throttle} from '../functions/api/_auth.js';
+import {createSession,throttle,pruneAuthAttempts} from '../functions/api/_auth.js';
 
 globalThis.crypto ??= webcrypto;
 
@@ -52,5 +52,19 @@ test('SQLite account sessions stay within ten after repeated logins',async()=>{
     assert.equal(sql.prepare('SELECT count(*) AS n FROM sessions WHERE user_id=?').get('artist-1').n,1);
     await createSession(DB,'artist-2');
     assert.equal(sql.prepare('SELECT count(*) AS n FROM sessions WHERE user_id=?').get('artist-2').n,1);
+  }finally{sql.close()}
+});
+
+test('anti-abuse cleanup deletes only old counters in bounded batches',async()=>{
+  const {sql,DB}=database();
+  try{
+    const insert=sql.prepare('INSERT INTO auth_attempts (key,count,window_start) VALUES (?,?,?)');
+    for(let i=0;i<300;i++)insert.run(`stale-${i}`,1,10);
+    insert.run('recent',1,100000);
+    await pruneAuthAttempts(DB,100100);
+    assert.equal(sql.prepare('SELECT count(*) AS n FROM auth_attempts').get().n,45);
+    assert.equal(sql.prepare("SELECT count(*) AS n FROM auth_attempts WHERE key='recent'").get().n,1);
+    await pruneAuthAttempts(DB,100100);
+    assert.equal(sql.prepare('SELECT count(*) AS n FROM auth_attempts').get().n,1);
   }finally{sql.close()}
 });
