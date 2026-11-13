@@ -34,5 +34,11 @@ test('email confirmation updates only the token owner and consumes the token',as
   const res=await onRequestPost({request:request(token.token),env:{DB:db,AUTH_ENABLED:'true'}});
   assert.equal(res.status,200);
   assert.ok(db.operations.some(x=>x.sql.includes('email_verified_at=CURRENT_TIMESTAMP')&&x.params[0]==='member-id'));
+  assert.ok(db.operations.some(x=>x.sql.includes('email_verified_at=CURRENT_TIMESTAMP')&&x.sql.includes('token_hash=? AND expires_at>?')));
   assert.ok(db.operations.some(x=>x.sql.includes('DELETE FROM email_verifications')));
+});
+test('email confirmation rejects a token consumed by a parallel confirmation',async()=>{
+  const db=database({user_id:'member-id'},0),token=await newEmailToken();
+  const res=await onRequestPost({request:request(token.token),env:{DB:db,AUTH_ENABLED:'true'}});
+  assert.equal(res.status,409);
 });
