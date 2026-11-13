@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parseByteRange,onRequestGet as audioGet} from '../functions/api/tracks/audio/[id].js';
+import {parseByteRange,onRequestGet as audioGet,onRequestHead as audioHead} from '../functions/api/tracks/audio/[id].js';
 import {onRequestGet as coverGet} from '../functions/api/tracks/cover/[id].js';
 import {onRequestGet as listGet} from '../functions/api/tracks/index.js';
 
@@ -38,6 +38,17 @@ test('only reviewed and published audio is streamable with correct 206 headers',
   const unsatisfiable=await audio('bytes=999-');
   assert.equal(unsatisfiable.status,416);
   assert.equal(unsatisfiable.headers.get('Content-Range'),'bytes */10');
+});
+test('HEAD reports byte ranges without downloading the R2 audio body',async()=>{
+  const privateStore={head:store.head,get:async()=>{throw Error('HEAD must not download audio')}};
+  const result=await audioHead({
+    request:new Request(`https://dubstepwacho.pages.dev/api/tracks/audio/${ID}`,{method:'HEAD',headers:{Range:'bytes=3-7'}}),
+    env:{DB:db({audio_key:'quarantine/sample/audio.mp3'}),PRIVATE_MUSIC:privateStore},params:{id:ID}
+  });
+  assert.equal(result.status,206);
+  assert.equal(result.headers.get('Content-Length'),'5');
+  assert.equal(result.headers.get('Content-Range'),'bytes 3-7/10');
+  assert.equal(await result.text(),'');
 });
 test('covers and catalog also require published clean records',async()=>{
   assert.equal((await coverGet({env:{DB:db(null),PRIVATE_MUSIC:store},params:{id:ID}})).status,404);
