@@ -22,7 +22,7 @@ Estado al 13 de noviembre de 2026. Este documento separa lo implementado de lo q
 
 1. Integrar escáner privado de malware para audio e imágenes y registrar resultado firmado en D1; si el escáner falla, no aprobar.
 2. Limitar tamaño, frecuencia, almacenamiento y costo, incluyendo cuentas de prueba y archivos corruptos.
-3. Permitir a moderadores revisar metadatos, derechos y archivos limpios. El endpoint de transición auditada `approved` a `published` y retirada ya está implementado; falta el panel administrativo real y una prueba end-to-end con D1/R2.
+3. Permitir a moderadores revisar metadatos, derechos y archivos limpios. El panel administrativo ya usa los endpoints autenticados de D1, con decisiones según estado y análisis, y la transición auditada `approved` a `published` y retirada. Falta una prueba end-to-end con D1/R2 y moderadores reales.
 4. Probar reproducción real, avance, pausa y cola en Chrome/Firefox y Safari iPhone con archivos autorizados.
 
 ## EP colectivo — primera edición
