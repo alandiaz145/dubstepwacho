@@ -1,16 +1,18 @@
-import React,{useEffect,useState} from 'react';
+import React,{useEffect,useRef,useState} from 'react';
 
 export default function EpArchive({onPlay}) {
   const [volumes,setVolumes]=useState([]),[selected,setSelected]=useState(null),[tracks,setTracks]=useState([]),[error,setError]=useState('');
+  const latestSelection=useRef(0);
   useEffect(()=>{let active=true;fetch('/api/eps/').then(r=>r.json()).then(data=>{if(active)setVolumes(Array.isArray(data.volumes)?data.volumes:[])}).catch(()=>{});return()=>{active=false}},[]);
   const open=async volume=>{
+    const requestId=++latestSelection.current;
     setSelected(volume);setTracks([]);setError('');
     try{
       const response=await fetch(`/api/eps/${encodeURIComponent(volume.slug)}`);
       if(!response.ok)throw Error('No pudimos cargar las canciones de este volumen.');
       const data=await response.json();
-      setTracks(Array.isArray(data.tracks)?data.tracks:[]);
-    }catch(e){setError(e.message)}
+      if(requestId===latestSelection.current)setTracks(Array.isArray(data.tracks)?data.tracks:[]);
+    }catch(e){if(requestId===latestSelection.current)setError(e.message)}
   };
   if(!volumes.length)return null;
   return <section className="ep-archive"><h2>EDICIONES PUBLICADAS</h2><p>Escuchá las compilaciones de nuestra comunidad.</p>
