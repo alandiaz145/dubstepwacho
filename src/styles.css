@@ -11,6 +11,9 @@
 .admin-track{display:flex;justify-content:space-between;align-items:center;gap:18px}
 .admin-track p{margin:6px 0;font-size:13px;opacity:.75}
 .admin-actions{display:flex;flex-wrap:wrap;gap:8px}
+.admin-history{margin-top:36px;border-top:1px solid #444;padding-top:25px}
+.admin-history article{padding:14px 0;border-bottom:1px solid #333;display:flex;flex-direction:column;gap:5px}
+.admin-history small{color:#aaa;font-size:12px}.admin-history p{font-size:13px;margin:0}
 @media(max-width:650px){.admin-track{flex-direction:column;align-items:flex-start}.admin-actions{width:100%}}
 .ep-archive{margin:40px 0}
 .ep-volume-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
