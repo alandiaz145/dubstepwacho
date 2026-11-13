@@ -56,8 +56,17 @@ export const verifyPassword = async (password, salt, expected) => {
 };
 export const createSession = async (db, userId) => {
   const token = hex(bytes(32));
-  await db.prepare('INSERT INTO sessions (token_hash,user_id,expires_at) VALUES (?,?,?)')
-    .bind(await digest(token),userId,Math.floor(Date.now()/1000)+SESSION_SECONDS).run();
+  const now=Math.floor(Date.now()/1000);
+  await db.batch([
+    // Bound active sessions per account; remove expired and oldest sessions.
+    db.prepare(`DELETE FROM sessions WHERE user_id=? AND (
+      expires_at<=? OR token_hash IN (
+        SELECT token_hash FROM sessions WHERE user_id=? AND expires_at>?
+        ORDER BY created_at DESC,token_hash DESC LIMIT -1 OFFSET 9))`)
+      .bind(userId,now,userId,now),
+    db.prepare('INSERT INTO sessions (token_hash,user_id,expires_at) VALUES (?,?,?)')
+      .bind(await digest(token),userId,now+SESSION_SECONDS)
+  ]);
   return token;
 };
 export const sessionCookie = token => `dw_session=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${SESSION_SECONDS}`;
