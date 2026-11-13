@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {webcrypto} from 'node:crypto';
-import {hashPassword,verifyPassword,slugify,validEmail,sessionCookie,sameOrigin,ready} from '../functions/api/_auth.js';
+import {hashPassword,verifyPassword,slugify,validEmail,sessionCookie,sameOrigin,ready,verifyTurnstile} from '../functions/api/_auth.js';
 
 globalThis.crypto ??= webcrypto;
 
@@ -27,4 +27,28 @@ test('binding a database does not activate accounts by itself',()=>{
   const env={DB:{prepare(){}}};
   assert.equal(ready(env),false);
   assert.equal(ready({...env,AUTH_ENABLED:'true'}),true);
+});
+test('registration challenge fails closed without credentials or a valid token', async()=>{
+  const request=new Request('https://dubstepwacho.pages.dev/api/auth/register');
+  let called=false;
+  const verifier=async()=>{called=true;return Response.json({success:true,hostname:'dubstepwacho.pages.dev'});};
+  assert.equal(await verifyTurnstile({},'token',request,verifier),false);
+  assert.equal(await verifyTurnstile({TURNSTILE_SECRET_KEY:'test'},'',request,verifier),false);
+  assert.equal(await verifyTurnstile({TURNSTILE_SECRET_KEY:'test'},'x'.repeat(2049),request,verifier),false);
+  assert.equal(called,false);
+  assert.equal(await verifyTurnstile({TURNSTILE_SECRET_KEY:'test'},'token',request,async()=>{throw Error('offline');}),false);
+});
+test('registration challenge validates Siteverify response and hostname', async()=>{
+  const request=new Request('https://dubstepwacho.pages.dev/api/auth/register',{headers:{'CF-Connecting-IP':'203.0.113.22'}});
+  const env={TURNSTILE_SECRET_KEY:'test'};
+  const valid=async(url,opts)=>{
+    assert.equal(url,'https://challenges.cloudflare.com/turnstile/v0/siteverify');
+    assert.equal(opts.method,'POST');
+    assert.equal(opts.body.get('remoteip'),'203.0.113.22');
+    return Response.json({success:true,hostname:'dubstepwacho.pages.dev'});
+  };
+  assert.equal(await verifyTurnstile(env,'good-token',request,valid),true);
+  assert.equal(await verifyTurnstile(env,'good-token',request,async()=>Response.json({success:true,hostname:'other.example'})),false);
+  assert.equal(await verifyTurnstile(env,'bad-token',request,async()=>Response.json({success:false})),false);
+  assert.equal(await verifyTurnstile(env,'bad-token',request,async()=>new Response('bad',{status:500})),false);
 });
