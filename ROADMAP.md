@@ -2,6 +2,15 @@
 
 Estado al 13 de noviembre de 2026. Este documento separa lo implementado de lo que aún no es seguro abrir al público.
 
+## Registro del ciclo autónomo actual
+
+- Reglas de continuidad incorporadas en `AGENTS.md`; el repositorio `main` sigue siendo la referencia y no se alteró la identidad visual.
+- Endurecidos los enlaces de verificación de correo y recuperación de contraseña: la transacción revalida el token vigente para impedir que dos solicitudes paralelas utilicen el mismo enlace. Tests de regresión añadidos.
+- Preparado `AUTOMATION.md` con el diseño de agentes programados, ramas, pruebas, permisos mínimos y revisión. **Ninguna automatización fue activada.**
+- Prueba externa confirmada: la interfaz administrativa más reciente se desplegó en `dubstepwacho.pages.dev` y `/api/eps/` devolvía HTTP 503 por migración aún pendiente. Las APIs de cuentas permanecen cerradas.
+- Bloqueos sin eludir: migraciones D1 `0003`–`0005` (acceso Cloudflare), Turnstile y correo real, escáner privado de MP3, reglas del EP, prueba física Safari iPhone y decisiones de cobro.
+- Próxima tarea recomendada independiente: reforzar los límites de solicitudes y las pruebas de seguridad de rutas administrativas; después revisar accesibilidad y compatibilidad del reproductor sin publicar archivos privados.
+
 ## Base pública (implementada)
 
 - Sitio responsive con catálogo conceptual, artistas, foro de demostración y sección EP colectivo Vol. 1.
@@ -10,6 +19,7 @@ Estado al 13 de noviembre de 2026. Este documento separa lo implementado de lo q
 - Reproductor con cola y avance automático; catálogo público filtrado por `published + clean` y audio con HTTP Range (206).
 - Protección del registro mediante Turnstile: clave pública servida sin revelar la secreta, widget visual y validación del servidor.
 - Tests automáticos de autenticación, publicación, subida y audio. No equivalen a pruebas manuales en iPhone.
+- Audio `HEAD` responde con metadatos/rangos sin descargar el cuerpo de R2; la implementación conserva streaming `206`.
 
 ## Antes de abrir el registro (bloqueantes)
 
