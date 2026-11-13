@@ -13,8 +13,12 @@ const request=(action,reason='')=>new Request(url,{
 });
 const mockDb=(changes=1)=>{
   const actions=[];
-  return {actions,prepare(sql){
+  return {actions,async batch(statements){
+    for(const statement of statements)actions.push(statement);
+    return [{meta:{changes}},{meta:{changes:changes?1:0}}];
+  },prepare(sql){
     return {bind(...args){return {
+      sql,args,
       first:async()=>({id:'admin-1',role:'admin'}),
       run:async()=>{actions.push({sql,args});return {meta:{changes}}}
     }}};
@@ -34,11 +38,12 @@ test('publishing only updates reviewed clean tracks',async()=>{
   assert.equal(res.status,200);
   assert.match(db.actions[0].sql,/status='approved' AND scan_status='clean'/);
   assert.match(db.actions[1].sql,/moderation_events/);
+  assert.match(db.actions[1].sql,/changes\(\)>0/);
 });
 test('invalid state and withdrawals are rejected safely',async()=>{
   const noChanges=mockDb(0);
   assert.equal((await onRequestPost({request:request('publish'),env:env(noChanges)})).status,409);
-  assert.equal(noChanges.actions.length,1);
+  assert.equal(noChanges.actions.length,2);
   const db=mockDb();
   assert.equal((await onRequestPost({request:request('withdraw',''),env:env(db)})).status,400);
   const withdrawn=await onRequestPost({request:request('withdraw','Solicitud del autor'),env:env(db)});
