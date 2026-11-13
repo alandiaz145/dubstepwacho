@@ -11,6 +11,7 @@
 - Un administrador **no puede aprobar** un track salvo que `scan_status='clean'` y `status='pending_review'`.
 - No hay actualmente un escáner conectado que pueda establecer el estado `clean`. Esto es intencional: ningún track nuevo puede pasar de cuarentena a aprobado todavía.
 - Las rutas públicas `/api/tracks`, `/api/tracks/audio/:id` y `/api/tracks/cover/:id` consultan D1 y sólo exponen `status='published'` junto a `scan_status='clean'`. Los audios admiten respuestas HTTP 206 y encabezados `Range` para avance en reproductores móviles; sin objeto autorizado responden 404. Esto no supone que ya haya canciones públicas.
+- `POST /api/admin/publication` permite publicar sólo pistas `approved` con análisis limpio, o retirar pistas `published`, y requiere administrador autenticado, mismo origen y motivo para retirar. Cada transición registra un evento de moderación. La integración completa de un escáner sigue siendo condición de lanzamiento.
 
 ## Flujo requerido antes de habilitar subidas
 
