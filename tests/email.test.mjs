@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {webcrypto} from 'node:crypto';
-import {emailDeliveryReady,newEmailToken,hashEmailToken,sendVerificationEmail} from '../functions/api/_email.js';
+import {emailDeliveryReady,newEmailToken,hashEmailToken,sendVerificationEmail,sendPasswordResetEmail} from '../functions/api/_email.js';
 
 globalThis.crypto ??= webcrypto;
 
@@ -28,4 +28,16 @@ test('mail adapter sends a confirmation link without exposing the provider key',
     return new Response('{}',{status:200});
   });
   assert.equal(sent,true);
+});
+test('password recovery message expires in 30 minutes and uses a distinct link',async()=>{
+  const token=await newEmailToken(1800);
+  assert.ok(token.expiresAt-Math.floor(Date.now()/1000)<=1800);
+  const env={RESEND_API_KEY:'key',VERIFICATION_EMAIL_FROM:'hola@example.com'};
+  const result=await sendPasswordResetEmail(env,{to:'test@example.com',displayName:'Test',token:'secret-token',origin:'https://dubstepwacho.pages.dev'},async(_,opts)=>{
+    const data=JSON.parse(opts.body);
+    assert.match(data.text,/\?reset=secret-token/);
+    assert.doesNotMatch(data.text,/\?verify=/);
+    return new Response('{}',{status:200});
+  });
+  assert.equal(result,true);
 });
