@@ -16,16 +16,23 @@ export async function onRequestPost({request,env}) {
   if(action==='withdraw'&&reason.length<3)return response({error:'Explicá el motivo de retirada.'},400);
   try {
     let update;
+    let audit;
     if(action==='publish'){
-      update=await env.DB.prepare(`UPDATE tracks SET status='published',published_at=CURRENT_TIMESTAMP
-        WHERE id=? AND status='approved' AND scan_status='clean'`).bind(id).run();
+      update=env.DB.prepare(`UPDATE tracks SET status='published',published_at=CURRENT_TIMESTAMP
+        WHERE id=? AND status='approved' AND scan_status='clean'`).bind(id);
+      audit=env.DB.prepare(`INSERT INTO moderation_events (id,track_id,actor_id,action,reason)
+        SELECT ?,?,?,?,? WHERE changes()>0`)
+        .bind(crypto.randomUUID(),id,user.id,action,reason);
     }else{
-      update=await env.DB.prepare(`UPDATE tracks SET status='withdrawn',review_reason=?
-        WHERE id=? AND status='published'`).bind(reason,id).run();
+      update=env.DB.prepare(`UPDATE tracks SET status='withdrawn',review_reason=?
+        WHERE id=? AND status='published'`).bind(reason,id);
+      audit=env.DB.prepare(`INSERT INTO moderation_events (id,track_id,actor_id,action,reason)
+        SELECT ?,?,?,?,? WHERE changes()>0`)
+        .bind(crypto.randomUUID(),id,user.id,action,reason);
     }
-    if(!update.meta?.changes)return response({error:'No se puede realizar la acción en el estado actual.'},409);
-    await env.DB.prepare('INSERT INTO moderation_events (id,track_id,actor_id,action,reason) VALUES (?,?,?,?,?)')
-      .bind(crypto.randomUUID(),id,user.id,action,reason).run();
+    // D1 batch is transactional: a failed audit insert rolls back the status update.
+    const results=await env.DB.batch([update,audit]);
+    if(!results[0]?.meta?.changes)return response({error:'No se puede realizar la acción en el estado actual.'},409);
     return response({id,status:action==='publish'?'published':'withdrawn'});
   }catch{return response({error:'No se pudo completar la publicación.'},500)}
 }
