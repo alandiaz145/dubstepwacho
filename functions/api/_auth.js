@@ -67,7 +67,7 @@ export const currentUser = async (request,db) => {
   if (!token) return null;
   return db.prepare(`SELECT users.id,users.email,users.display_name AS displayName,users.role
     FROM sessions JOIN users ON users.id=sessions.user_id
-    WHERE sessions.token_hash=? AND sessions.expires_at>?`)
+    WHERE sessions.token_hash=? AND sessions.expires_at>? AND users.email_verified_at IS NOT NULL`)
     .bind(await digest(token),Math.floor(Date.now()/1000)).first();
 };
 export const invalidateSession = async (request,db) => {
