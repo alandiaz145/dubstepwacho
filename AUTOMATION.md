@@ -11,7 +11,7 @@ Permitir ciclos de mantenimiento que lean `AGENTS.md`, `ROADMAP.md` y `SECURITY.
 1. **GitHub Actions (disparador manual inicialmente)** crea una ejecución con permisos mínimos: `contents: read`. No se agrega un cron hasta que Alan lo autorice.
 2. **Agente de programación aislado** recibe una tarea explícita elegida del roadmap, sin secretos de Cloudflare, R2, D1 ni capacidades de desplegar. No debe procesar MP3 privados ni datos personales.
 3. **Rama de trabajo y propuesta**: cambios limitados a archivos permitidos; el agente debe abrir una solicitud de revisión (pull request) mediante una credencial de alcance específico y temporal sólo cuando ese permiso se apruebe.
-4. **Pruebas de CI**: `npm run test:security`, `npm run build` y `npm run test:sites`. Fallos impiden aprobar; registrar salida, versiones y riesgos en la propuesta. `npm run check:public` es una comprobación externa manual de solo lectura, no un permiso para mutar producción.
+4. **Pruebas de CI**: ejecutar con Node.js 24 (`node:sqlite` se usa en las pruebas reales de transacciones): `npm run test:security`, `npm run build` y `npm run test:sites`. Fallos impiden aprobar; registrar salida, versiones y riesgos en la propuesta. `npm run check:public` es una comprobación externa manual de solo lectura, no un permiso para mutar producción.
 5. **Revisión**: una persona aprueba el merge hacia `main`. Cloudflare sólo despliega código desde la rama protegida siguiendo los controles ya existentes.
 
 ## Barreras obligatorias
