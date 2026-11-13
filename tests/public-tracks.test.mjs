@@ -59,3 +59,30 @@ test('covers and catalog also require published clean records',async()=>{
   assert.equal(data.tracks[0].url,`/api/tracks/audio/${ID}`);
   assert.equal(data.tracks[0].downloadAllowed,false);
 });
+test('unpublished or incomplete records never access private R2 objects',async()=>{
+  const forbidden={head:async()=>{throw Error('private R2 accessed')},get:async()=>{throw Error('private R2 accessed')}};
+  for(const track of [null,{audio_key:null,cover_key:null}]){
+    const env={DB:db(track),PRIVATE_MUSIC:forbidden};
+    const stream=await audioGet({request:new Request(`https://dubstepwacho.pages.dev/api/tracks/audio/${ID}`),env,params:{id:ID}});
+    const cover=await coverGet({env,params:{id:ID}});
+    assert.equal(stream.status,404);
+    assert.equal(cover.status,404);
+  }
+});
+test('public catalog fails closed without DB and exposes no private storage keys',async()=>{
+  const unavailable=await listGet({env:{}});
+  assert.equal(unavailable.status,503);
+  assert.deepEqual(await unavailable.json(),{tracks:[]});
+  const index=await listGet({env:{DB:db({id:ID,title:'Released',artist:'Example',audio_key:'private/audio.mp3',cover_key:'private/cover.png',email:'private@example.com'})}});
+  const body=await index.json();
+  assert.equal(index.status,200);
+  assert.equal(body.tracks[0].url,`/api/tracks/audio/${ID}`);
+  assert.equal(body.tracks[0].coverUrl,`/api/tracks/cover/${ID}`);
+  assert.equal(body.tracks[0].audio_key,undefined);
+  assert.equal(body.tracks[0].cover_key,undefined);
+  assert.equal(body.tracks[0].email,undefined);
+});
+test('audio stream fails closed when R2 metadata operations are unavailable',async()=>{
+  const result=await audioGet({request:new Request(`https://dubstepwacho.pages.dev/api/tracks/audio/${ID}`),env:{DB:db({audio_key:'private/a.mp3'}),PRIVATE_MUSIC:{get:async()=>null}},params:{id:ID}});
+  assert.equal(result.status,503);
+});
