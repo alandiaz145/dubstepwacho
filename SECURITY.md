@@ -3,6 +3,7 @@
 ## Estado actual (prelanzamiento)
 
 - `AUTH_ENABLED` no está activado: no se admiten registros ni sesiones públicas.
+- El registro exige `TURNSTILE_SECRET_KEY` y verifica cada token contra Siteverify, con comprobación de hostname. Si falta el token, venció, falla la red o no hay credencial, el servidor rechaza el registro. Esta barrera no habilita las cuentas por sí sola.
 - `UPLOADS_ENABLED` no está activado: no se reciben MP3 de usuarios.
 - Los archivos futuros se guardan en `PRIVATE_MUSIC`, dentro de `quarantine/`, sin acceso público directo a R2.
 - Se limita el tamaño a 10 MiB por MP3 y 3 MiB por portada, con control de firma inicial, cantidad de envíos, origen y derechos declarados.
@@ -28,6 +29,7 @@ No usar automáticamente el API público de VirusTotal: sus condiciones restring
 
 ## Condiciones de lanzamiento
 
+- Crear el widget Turnstile del dominio real, configurar su clave secreta como secreto de Cloudflare (jamás en GitHub), integrar el widget y su token en el formulario, y probar el flujo completo antes de activar `AUTH_ENABLED`. `TURNSTILE_TEST_MODE` se reserva para pruebas aisladas con claves de prueba; debe permanecer ausente en producción.
 - Integración real de análisis de malware y pruebas con archivos limpios, corruptos y el archivo de prueba EICAR (sin almacenar ni publicar material malicioso).
 - Verificación de correo, protección anti-bots y recuperación de cuenta.
 - Pruebas de control de acceso (usuarios, artistas y administradores) y de moderación, incluidos intentos de aprobación antes del resultado limpio.
