@@ -23,3 +23,26 @@ test('upload and admin decisions are unavailable without backing D1',async()=>{
   assert.match((await upload.json()).error,/todavía no está habilitado/);
   assert.match((await decision.json()).error,/todavía no está habilitado/);
 });
+
+test('moderation cannot approve a track before a clean malware scan',async()=>{
+  const origin='https://dubstepwacho.pages.dev';
+  const trackId='11111111-1111-4111-8111-111111111111';
+  const makeEnv=(scanStatus,status)=>({
+    AUTH_ENABLED:'true',
+    DB:{prepare(sql){return {bind(){return {async first(){
+      if(sql.includes('FROM sessions')) return {id:'admin-1',role:'admin'};
+      if(sql.includes('FROM tracks')) return {scan_status:scanStatus,status};
+      throw Error('unexpected query');
+    }}}}}}
+  });
+  const request=()=>new Request(`${origin}/api/admin/review`,{
+    method:'POST',
+    headers:{Origin:origin,Cookie:`dw_session=${'a'.repeat(64)}`,'Content-Type':'application/json'},
+    body:JSON.stringify({id:trackId,action:'approve'})
+  });
+  for(const [scanStatus,status] of [['pending','pending_analysis'],['infected','pending_review'],['pending','pending_review']]){
+    const result=await review({request:request(),env:makeEnv(scanStatus,status)});
+    assert.equal(result.status,409);
+    assert.match((await result.json()).error,/falta análisis limpio/);
+  }
+});
