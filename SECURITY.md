@@ -10,6 +10,7 @@
 - Se limita el tamaño a 10 MiB por MP3 y 3 MiB por portada, con control de firma inicial, cantidad de envíos, origen y derechos declarados.
 - Un administrador **no puede aprobar** un track salvo que `scan_status='clean'` y `status='pending_review'`.
 - No hay actualmente un escáner conectado que pueda establecer el estado `clean`. Esto es intencional: ningún track nuevo puede pasar de cuarentena a aprobado todavía.
+- Las rutas públicas `/api/tracks`, `/api/tracks/audio/:id` y `/api/tracks/cover/:id` consultan D1 y sólo exponen `status='published'` junto a `scan_status='clean'`. Los audios admiten respuestas HTTP 206 y encabezados `Range` para avance en reproductores móviles; sin objeto autorizado responden 404. Esto no supone que ya haya canciones públicas.
 
 ## Flujo requerido antes de habilitar subidas
 
