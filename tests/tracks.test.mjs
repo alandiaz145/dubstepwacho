@@ -20,4 +20,6 @@ test('upload and admin decisions are unavailable without backing D1',async()=>{
   const decision=await review({request:new Request(`${url}/api/admin/review`,{method:'POST',headers:{Origin:url}}),env:{}});
   assert.equal(upload.status,503);
   assert.equal(decision.status,503);
+  assert.match((await upload.json()).error,/todavía no está habilitado/);
+  assert.match((await decision.json()).error,/todavía no está habilitado/);
 });
