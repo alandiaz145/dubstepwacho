@@ -13,7 +13,7 @@ Estado al 13 de noviembre de 2026. Este documento separa lo implementado de lo q
 
 ## Antes de abrir el registro (bloqueantes)
 
-1. **Verificación de correo**: decidir servicio transaccional, registrar dirección verificada, emisión y expiración de enlace, reenvío limitado, recuperación de contraseña y prevención de enumeración. Las cuentas no verificadas no deben obtener sesión activa.
+1. **Verificación de correo**: la migración `0003_email_verification.sql`, el enlace de una hora, la comprobación, el reenvío limitado y el bloqueo de sesiones sin confirmar ya están desarrollados. Falta aplicar migración, decidir/verificar remitente transaccional, probar entrega real, recuperación de contraseña y evitar la enumeración por casos extremos.
 2. **Turnstile real**: crear widget para `dubstepwacho.pages.dev`, guardar `TURNSTILE_SECRET_KEY` en secretos, configurar `TURNSTILE_SITE_KEY`, comprobar desafíos reales y medir falsos positivos. Mantener `AUTH_ENABLED` desactivado hasta entonces.
 3. **Seguridad de sesiones y roles**: pruebas de expiración, cierre de sesión, revocación y acceso indebido. Revisión de límites de IP y protección Cloudflare WAF contra exceso de solicitudes.
 4. **Políticas visibles**: privacidad, condiciones de uso, denuncias de derechos, edad mínima y contacto de soporte. Evitar formularios que prometan enviar datos mientras sean ilustrativos.
