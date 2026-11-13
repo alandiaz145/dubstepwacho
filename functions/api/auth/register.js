@@ -1,4 +1,4 @@
-import {body,createSession,hashPassword,ready,response,sameOrigin,sessionCookie,slugify,throttle,unavailable,validEmail} from '../_auth.js';
+import {body,createSession,hashPassword,ready,response,sameOrigin,sessionCookie,slugify,throttle,unavailable,validEmail,verifyTurnstile} from '../_auth.js';
 
 export async function onRequestPost({request,env}) {
   if(!ready(env)) return unavailable();
@@ -6,6 +6,8 @@ export async function onRequestPost({request,env}) {
   if(!await throttle(env.DB,request,'register',4)) return response({error:'Demasiados intentos. Probá más tarde.'},429);
   let input;
   try { input=await body(request); } catch { return response({error:'Solicitud inválida.'},400); }
+  if (!await verifyTurnstile(env,input.turnstileToken,request))
+    return response({error:'No pudimos verificar la solicitud. Recargá el desafío de seguridad.'},403);
   const email=String(input.email||'').trim().toLowerCase();
   const displayName=String(input.displayName||'').trim();
   const password=input.password;
