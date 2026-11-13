@@ -9,6 +9,7 @@
 - Recuperación de contraseña preparada con `0004_password_reset.sql`: enlace de 30 minutos, token hasheado de un solo uso, respuesta genérica para evitar revelar cuentas y revocación de todas las sesiones al cambiar la contraseña. Requiere las mismas claves de correo, Turnstile y migraciones antes de su uso público.
 - La confirmación de correo y el cambio de contraseña verifican de nuevo, dentro de su transacción D1, que el token todavía exista y no esté vencido. Esto reduce el riesgo de reutilización en solicitudes simultáneas; requiere prueba integral en la base real antes de habilitar cuentas.
 - Las sesiones nuevas se crean en una transacción que elimina sesiones vencidas del usuario y conserva como máximo 10 sesiones activas por cuenta. El inicio de sesión adicional puede cerrar una sesión antigua; falta comprobarlo con D1 real.
+- SQLite local confirmó límites por IP y operación, renovación de ventana de 15 minutos, separación de usuarios y poda de sesiones a diez. Esto verifica las consultas SQL, no constituye un ensayo de carga contra Cloudflare.
 - `UPLOADS_ENABLED` no está activado: no se reciben MP3 de usuarios.
 - Los archivos futuros se guardan en `PRIVATE_MUSIC`, dentro de `quarantine/`, sin acceso público directo a R2.
 - Se limita el tamaño a 10 MiB por MP3 y 3 MiB por portada, con control de firma inicial, cantidad de envíos, origen y derechos declarados.
