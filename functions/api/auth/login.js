@@ -11,7 +11,7 @@ export async function onRequestPost({request,env}) {
   const user=await env.DB.prepare('SELECT * FROM users WHERE email=?').bind(email).first();
   // Spend comparable work when the account is absent to reduce email enumeration.
   const ok=await verifyPassword(input.password,user?.password_salt||'00'.repeat(16),user?.password_hash||'00'.repeat(32));
-  if(!user||!ok) return response({error:'Credenciales inválidas.'},401);
+  if(!user||!ok||!user.email_verified_at) return response({error:'Credenciales inválidas o correo sin verificar.'},401);
   const token=await createSession(env.DB,user.id);
   return response({user:{id:user.id,email:user.email,displayName:user.display_name,role:user.role}},200,{'Set-Cookie':sessionCookie(token)});
 }
