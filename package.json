@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build && node scripts/prepare-sites-build.mjs",
     "preview": "vite preview",
-    "test:sites": "node --test tests/sites-worker.test.mjs"
+    "test:sites": "node --test tests/sites-worker.test.mjs",
+    "test:security": "node --test tests/*.test.mjs",
+    "check:public": "node scripts/check-public-endpoints.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-react": "5.0.4",
