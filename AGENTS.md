@@ -1,5 +1,15 @@
 # Prototype Instructions
 
+## Autonomous development continuity
+
+- Treat GitHub `alandiaz145/dubstepwacho` on `main` as the durable source of truth. At the start of each development cycle, read this file, `ROADMAP.md`, and `SECURITY.md`, inspect the latest code and commits, and select the next independently authorized task.
+- Work in cycles: inspect dependencies, implement a bounded change, add/update tests, run the relevant suite and production build, verify the result, commit with a descriptive message to `main`, update the roadmap, and continue with the next safe task. Do not stop merely because one stage is complete.
+- Prioritize account security and recovery; then private uploads, moderation and playback; then EPs, artist profiles and community; then mobile performance and accessibility; then integration QA. Preserve Alan's approved visual identity, artwork and promotional copy; Alan owns final artistic decisions.
+- Ordinary technical changes, tests, refactoring, documentation and GitHub commits are authorized. Do not enable public registration, user uploads, paid services, public distribution of unpublished works, production-writing scheduled agents, or new privileged integrations without separate authorization and verified safeguards.
+- When blocked by credentials, Cloudflare configuration, costs, commercial decisions or physical-device testing, record the exact blocker and a safe next step in `ROADMAP.md`, then work on another independent task. Never bypass permissions or invent successful production verification.
+- Keep `ROADMAP.md` current with completed functionality, bugs, blocked tasks, test results and the next recommended action. Update `SECURITY.md` for security-relevant decisions. Keep credential values out of repositories, logs and replies.
+- Future scheduled coding agents are design-only until Alan explicitly authorizes their permissions, spending and production effects. See `AUTOMATION.md`.
+
 Run the local server yourself and open the preview in the browser available to this environment. Do not give the user server-start instructions when you can run it.
 
 Before making substantial visual changes, use the Product Design plugin's `get-context` skill when the visual source is unclear or no longer matches the current goal. When the user gives durable prototype-specific design feedback, preferences, or decisions, record them in `AGENTS.md`.
