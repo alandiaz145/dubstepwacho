@@ -17,6 +17,7 @@ Estado al 13 de noviembre de 2026. Este documento separa lo implementado de lo q
 - Bloqueos sin eludir: migraciones D1 `0003`–`0005` (acceso Cloudflare), Turnstile y correo real, escáner privado de MP3, reglas del EP, prueba física Safari iPhone y decisiones de cobro.
 - Pruebas de SQLite real para límites por IP/operación, reinicio de ventana de 15 minutos, aislamiento entre usuarios y máximo de diez sesiones; sin ataques ni tráfico de carga contra producción.
 - Limpieza incremental y acotada (256 registros antiguos por ejecución muestreada) de `auth_attempts` preparada, con índice en migración `0006_auth_attempts_maintenance.sql` y prueba local SQLite. Falta aplicar también `0006` antes de abrir cuentas.
+- Corregido un fallo de integración de la radio: el catálogo entrega `/api/tracks/audio/:id`, pero la cola sólo aceptaba URL HTTPS absolutas. Ahora admite exclusivamente esas rutas públicas validas y orígenes HTTPS; salta pistas fallidas y corta al agotar las opciones, sin bucles. Tests de regresión añadidos; falta prueba con MP3 real autorizado.
 - Próxima tarea independiente recomendada: continuar pruebas de accesibilidad y recuperación de errores del reproductor; verificar que las respuestas públicas no revelen datos privados. Próxima tarea externa bloqueada: instalar las migraciones `0003`–`0006` y verificar los bindings de Cloudflare antes de habilitar cualquier función privada.
 
 ## Base pública (implementada)
