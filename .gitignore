@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.wrangler/
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+*.log
+
+# Keep private database copies outside source control.
+/backups/
+*.sqlite
+*.sqlite3
+*.db

@@ -1,26 +1,38 @@
-import React,{useCallback,useEffect,useState} from 'react';
+import React,{useCallback,useEffect,useState,useRef} from 'react';
 
 const labels={pending_analysis:'En análisis',pending_review:'Pendiente de revisión',approved:'Aprobado',published:'Publicado',rejected:'Rechazado',withdrawn:'Retirado'};
 const actionLabels={approve:'Aprobación',reject:'Rechazo',request_changes:'Cambios solicitados',publish:'Publicación',withdraw:'Retirada'};
 
-export default function AdminPanel({account}) {
+export default function AdminPanel({account,onSessionExpired}) {
   const [tracks,setTracks]=useState([]),[events,setEvents]=useState([]),[loading,setLoading]=useState(false),[busy,setBusy]=useState(''),[message,setMessage]=useState('');
+  const latestRequest=useRef(0);
+  const denyAccess=useCallback(result=>{
+    if(![401,403].includes(result.status))return false;
+    latestRequest.current++;setTracks([]);setEvents([]);setLoading(false);
+    if(result.status===401)onSessionExpired?.();
+    else setMessage('Tus permisos cambiaron. No se puede consultar esta información.');
+    return true;
+  },[onSessionExpired]);
   const refresh=useCallback(async()=>{
     if(account?.role!=='admin')return;
-    setLoading(true);
+    const requestId=++latestRequest.current;
+    setLoading(true);setMessage('');
     try {
       const [trackResult,historyResult]=await Promise.all([
         fetch('/api/admin/tracks',{credentials:'same-origin'}),
         fetch('/api/admin/history',{credentials:'same-origin'})
       ]);
+      if(requestId!==latestRequest.current)return;
+      if(denyAccess(trackResult)||denyAccess(historyResult))return;
       const [trackData,historyData]=await Promise.all([trackResult.json(),historyResult.json()]);
+      if(requestId!==latestRequest.current)return;
       if(!trackResult.ok)throw Error(trackData.error||'No se pudo cargar la moderación.');
       setTracks(Array.isArray(trackData.tracks)?trackData.tracks:[]);
       if(!historyResult.ok)throw Error(historyData.error||'No se pudo cargar el historial.');
       setEvents(Array.isArray(historyData.events)?historyData.events:[]);
-    }catch(error){setMessage(error.message)}finally{setLoading(false)}
-  },[account?.role]);
-  useEffect(()=>{refresh()},[refresh]);
+    }catch(error){if(requestId===latestRequest.current)setMessage(error.message)}finally{if(requestId===latestRequest.current)setLoading(false)}
+  },[account?.role,denyAccess]);
+  useEffect(()=>{refresh();return()=>{latestRequest.current++;}},[refresh]);
   const act=async(track,action)=>{
     if(busy)return;
     const withdrawing=action==='withdraw',rejecting=action==='reject';
@@ -31,6 +43,7 @@ export default function AdminPanel({account}) {
     try {
       const endpoint=['publish','withdraw'].includes(action)?'/api/admin/publication':'/api/admin/review';
       const result=await fetch(endpoint,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:track.id,action,reason})});
+      if(denyAccess(result))return;
       const data=await result.json();
       if(!result.ok)throw Error(data.error||'No se pudo completar la acción.');
       setMessage('Acción guardada en el historial de moderación.');

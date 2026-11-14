@@ -11,10 +11,16 @@ Permitir ciclos de mantenimiento que lean `AGENTS.md`, `ROADMAP.md` y `SECURITY.
 1. **GitHub Actions (disparador manual inicialmente)** crea una ejecución con permisos mínimos: `contents: read`. No se agrega un cron hasta que Alan lo autorice.
 2. **Agente de programación aislado** recibe una tarea explícita elegida del roadmap, sin secretos de Cloudflare, R2, D1 ni capacidades de desplegar. No debe procesar MP3 privados ni datos personales.
 3. **Rama de trabajo y propuesta**: cambios limitados a archivos permitidos; el agente debe abrir una solicitud de revisión (pull request) mediante una credencial de alcance específico y temporal sólo cuando ese permiso se apruebe.
-4. **Pruebas de CI**: ejecutar con Node.js 24 (`node:sqlite` se usa en las pruebas reales de transacciones): `npm run test:security`, `npm run build` y `npm run test:sites`. Fallos impiden aprobar; registrar salida, versiones y riesgos en la propuesta. `npm run check:public` es una comprobación externa manual de solo lectura, no un permiso para mutar producción.
+4. **Pruebas de CI**: ejecutar con Node.js 24 (`node:sqlite` se usa en las pruebas reales de transacciones): `npm run build`, `npm run test:security`, `npm run test:runtime`, `npm run test:browser` y `npm run test:sites` (en ese orden, porque la suite incluye verificación de los artefactos de empaquetado). Fallos impiden aprobar; registrar salida, versiones y riesgos en la propuesta. `npm run check:public` es una comprobación externa manual de solo lectura, no un permiso para mutar producción.
 5. **Revisión**: una persona aprueba el merge hacia `main`. Cloudflare sólo despliega código desde la rama protegida siguiendo los controles ya existentes.
 
 ## Barreras obligatorias
+
+- `test:browser` requiere Chromium instalado (o `DW_CHROMIUM_PATH`) y usa un perfil aislado, APIs interceptadas y audio WAV sintético. No descargar ni publicar MP3 de usuarios para pruebas. Playwright-core no instala un navegador por sí solo; preparar esa dependencia en el ejecutor antes del piloto, sin activar Actions todavía.
+
+- `test:runtime` ejecuta Miniflare/workerd con D1/R2 efímeros locales y tráfico saliente interceptado. Sólo usa datos sintéticos, banderas de prueba en memoria y un adaptador de rutas ubicado en `tests/runtime/`; no requiere ni debe recibir credenciales de Cloudflare ni correo real. No incluir ese adaptador en un despliegue.
+
+- El manifiesto `.openai/hosting.json` ahora permite empaquetado local del frontend sin `project_id` ni bindings. No es el manifiesto original recuperado y no autoriza publicación. Antes del piloto, verificar build desde un checkout limpio; no inventar identidad, saltar pruebas ni confundir el artefacto estático con el backend de Pages.
 
 - Sin permisos de escritura de producción, sin mutaciones de D1 ni acceso R2 desde la ejecución autónoma.
 - Sin `secrets` de pago ni claves de acceso a Cloudflare en agentes que analicen contenido no confiable de issues o pull requests.
