@@ -8,7 +8,7 @@
 - Ordinary technical changes, tests, refactoring, documentation and GitHub commits are authorized. Do not enable public registration, user uploads, paid services, public distribution of unpublished works, production-writing scheduled agents, or new privileged integrations without separate authorization and verified safeguards.
 - When blocked by credentials, Cloudflare configuration, costs, commercial decisions or physical-device testing, record the exact blocker and a safe next step in `ROADMAP.md`, then work on another independent task. Never bypass permissions or invent successful production verification.
 - Keep `ROADMAP.md` current with completed functionality, bugs, blocked tasks, test results and the next recommended action. Update `SECURITY.md` for security-relevant decisions. Keep credential values out of repositories, logs and replies.
-- Future scheduled coding agents are design-only until Alan explicitly authorizes their permissions, spending and production effects. See `AUTOMATION.md`.
+- Alan chose all-day scheduled development cycles with review-gated Pull Requests. Until agent credentials, cost limits and branch protection are explicitly configured, scheduled coding remains inactive. Autonomous agents must use separate branches and PRs and must not merge to `main` or deploy. See `AUTOMATION.md`.
 
 Run the local server yourself and open the preview in the browser available to this environment. Do not give the user server-start instructions when you can run it.
 
