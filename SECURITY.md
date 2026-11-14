@@ -2,6 +2,10 @@
 
 ## Estado actual (prelanzamiento)
 
+- El ingreso revalida hash, sal y correo verificado dentro de la transacción de creación de sesión. Si una recuperación cambió las credenciales después de su lectura inicial, se rechaza el ingreso sin emitir cookie ni podar sesiones. Requiere ensayo con D1 real antes de activar cuentas.
+- La revocación de sesiones de recuperación depende del cambio efectivo de contraseña en la sentencia anterior de la misma transacción (`changes()>0`), sin una segunda evaluación independiente de vencimiento. Una falla de persistencia revierte contraseña, sesiones y consumo del token; verificado con SQLite local.
+- Recuperación y reenvío de verificación revalidan la espera de 15 minutos y el estado de verificación del usuario en la escritura SQL. Solicitudes concurrentes no rotan el token dos veces ni disparan dos correos en la misma ventana. Pruebas con proveedor simulado, sin envío externo real.
+
 - Enlaces de recuperación/verificación: el frontend retira los parámetros secretos de la URL al abrir la página y los conserva en memoria para la confirmación explícita. La política `no-referrer` impide enviar referencias desde el documento. Esto no elimina el token de solicitudes iniciales ni de registros de infraestructura previos; no registrar URLs de recuperación en analítica ni logs. Validación integral en navegador pendiente.
 - Subidas privadas: el cuerpo multipart tiene límite de bytes real (13 MiB + 64 KiB), independiente del encabezado Content-Length. Los límites individuales siguen en 10 MiB para MP3 y 3 MiB para portada. Tras fallo de persistencia se intenta borrar ambos objetos; un fallo de R2 puede dejar objetos huérfanos privados que requieren reconciliación operativa antes de habilitar recepción.
 
