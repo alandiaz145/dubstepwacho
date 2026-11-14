@@ -6,6 +6,8 @@ Estado al 14 de noviembre de 2026. Este documento separa lo implementado de lo q
 
 ### Ciclo del 14 de noviembre de 2026 — propuesta en rama para revisión
 
+- PR #2 marcado listo para revisión en GitHub (fuera de borrador), sin aprobación propia ni merge. Los checks locales están verdes; los bloqueos externos de lanzamiento siguen vigentes.
+
 - Cierre de preparación autorizado: `npm ci`, build, seguridad **89/89**, Sites **4/4**, runtime Cloudflare **3/3**, navegador **6/6** y auditoría npm sin vulnerabilidades. El bloqueo local de empaquetado quedó resuelto con un manifiesto estático sin asociar; no se recuperó una identidad original ni se creó/desplegó un Site, y no se configuró allí el backend Pages.
 - Revisión técnica interna del PR completada y documentada en `docs/pr-2-review.md`; no sustituye revisión independiente. Se corrigió estado de cuenta obsoleto después de recuperación, con regresión Chromium. No hubo merge ni despliegue.
 - Preparado `npm run verify:backup` con restauración sólo en memoria, restricciones SQL, hash de bytes originales, integridad, claves foráneas, esquema base y comparación de recuentos. Cuatro pruebas sintéticas pasan. Procedimiento en `docs/d1-backup-runbook.md`; no se obtuvo ni verificó un backup productivo.
