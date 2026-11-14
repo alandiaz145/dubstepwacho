@@ -1,30 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {Miniflare} from 'miniflare';
-import {readFileSync,readdirSync} from 'node:fs';
-import {fileURLToPath} from 'node:url';
+import {origin,startRuntime} from './helpers.mjs';
 
-const origin='https://dubstepwacho.test';
 test('account lifecycle, session revocation and private range streaming run on local Cloudflare',{timeout:60000},async()=>{
-  const sent=[];
-  const mf=new Miniflare({
-    host:'127.0.0.1',modules:true,modulesRules:[{type:'ESModule',include:['**/*.js']}],scriptPath:fileURLToPath(new URL('worker.js',import.meta.url)),
-    compatibilityDate:'2026-07-01',d1Databases:['DB'],r2Buckets:['PRIVATE_MUSIC'],d1Persist:false,r2Persist:false,
-    bindings:{AUTH_ENABLED:'true',TURNSTILE_SECRET_KEY:'test-only',RESEND_API_KEY:'test-only',VERIFICATION_EMAIL_FROM:'test@example.test'},
-    outboundService:async request=>{
-      const url=new URL(request.url);
-      if(url.hostname==='challenges.cloudflare.com')return Response.json({success:true,hostname:'dubstepwacho.test'});
-      assert.equal(url.href,'https://api.resend.com/emails');
-      sent.push(await request.json());return Response.json({id:'test-only'});
-    }
-  });
+  const {mf,db,sent,close}=await startRuntime();
   try{
-    const db=await mf.getD1Database('DB');
-    const migrations=new URL('../../migrations/',import.meta.url);
-    for(const name of readdirSync(migrations).filter(name=>/^\d+.*\.sql$/.test(name)).sort()){
-      const sql=readFileSync(new URL(name,migrations),'utf8').replace(/^--.*$/gm,'');
-      await db.batch(sql.split(';').map(query=>query.trim()).filter(Boolean).map(query=>db.prepare(query)));
-    }
     const post=(path,data,cookie='')=>mf.dispatchFetch(`${origin}/api/auth/${path}`,{
       method:'POST',headers:{Origin:origin,Cookie:cookie,'Content-Type':'application/json'},body:JSON.stringify(data)
     });
@@ -80,5 +60,5 @@ test('account lifecycle, session revocation and private range streaming run on l
     await db.prepare("UPDATE tracks SET status='withdrawn' WHERE id=?").bind(id).run();
     assert.equal((await mf.dispatchFetch(audioUrl)).status,404);
     assert.ok(await bucket.head(key),'withdrawal denies access without relying on deleting the private object');
-  }finally{await mf.dispose();}
+  }finally{await close();}
 });
