@@ -4,6 +4,7 @@ Estado al 13 de noviembre de 2026. Este documento separa lo implementado de lo q
 
 ## Registro del ciclo autónomo actual
 
+- Cloudflare D1 real inspeccionado en `dubstepwacho-db`: actualmente existen las tablas iniciales `users`, `sessions`, `auth_attempts`, `artist_profiles`, `tracks` y `moderation_events`; `users` carece de `email_verified_at`. Se obtuvo bookmark Time Travel del estado previo, sin modificar registros. El respaldo independiente sigue pendiente: la consola visual no ofrece exportación SQL, y este entorno no tiene credenciales de API/Wrangler configuradas. No ejecutar `ALTER TABLE` ni otras migraciones antes de exportar y verificar el backup. Las seis migraciones se ejecutaron con éxito en SQLite local en el orden 0001–0006; no equivalen a su aplicación en D1 productivo.
 - Reglas de continuidad incorporadas en `AGENTS.md`; el repositorio `main` sigue siendo la referencia y no se alteró la identidad visual.
 - Endurecidos los enlaces de verificación de correo y recuperación de contraseña: la transacción revalida el token vigente para impedir que dos solicitudes paralelas utilicen el mismo enlace. Tests de regresión añadidos.
 - Sesiones acotadas a 10 por usuario, con eliminación de sesiones vencidas y creación transaccional; prueba automatizada añadida.
