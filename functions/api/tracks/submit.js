@@ -41,18 +41,24 @@ export async function onRequestPost({request,env}) {
   const imageType=coverType(coverBytes);
   if(!isMp3(audioBytes)||!imageType) return response({error:'El MP3 o la portada no tienen un formato válido.'},415);
   const id=crypto.randomUUID(),audioKey=`quarantine/${id}/audio.mp3`,coverKey=`quarantine/${id}/cover.${imageType==='image/png'?'png':'jpg'}`;
+  const cleanup=()=>Promise.allSettled([audioKey,coverKey].map(key=>Promise.resolve().then(()=>env.PRIVATE_MUSIC.delete(key))));
   try{
     await env.PRIVATE_MUSIC.put(audioKey,audioBytes,{httpMetadata:{contentType:'audio/mpeg'}});
     await env.PRIVATE_MUSIC.put(coverKey,coverBytes,{httpMetadata:{contentType:imageType}});
-    await env.DB.batch([
+    const saved=await env.DB.batch([
       env.DB.prepare(`INSERT INTO tracks (id,user_id,title,artist_name,collaborators,genre,description,download_allowed,audio_key,cover_key,audio_bytes,audio_sha256)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)
-        .bind(id,user.id,title,artist,collaborators,genre,description,download,audioKey,coverKey,mp3.size,await sha256(audioBytes)),
-      env.DB.prepare('INSERT INTO moderation_events (id,track_id,actor_id,action) VALUES (?,?,?,?)')
+        SELECT ?,?,?,?,?,?,?,?,?,?,?,? WHERE (
+          SELECT COUNT(*) FROM tracks WHERE user_id=? AND created_at>datetime('now','-1 day'))<5`)
+        .bind(id,user.id,title,artist,collaborators,genre,description,download,audioKey,coverKey,mp3.size,await sha256(audioBytes),user.id),
+      env.DB.prepare('INSERT INTO moderation_events (id,track_id,actor_id,action) SELECT ?,?,?,? WHERE changes()>0')
         .bind(crypto.randomUUID(),id,user.id,'submitted')
     ]);
+    if(saved[0]?.meta?.changes!==1){
+      await cleanup();
+      return response({error:'Límite de cinco canciones por día.'},429);
+    }
   }catch{
-    await Promise.allSettled([audioKey,coverKey].map(key=>Promise.resolve().then(()=>env.PRIVATE_MUSIC.delete(key))));
+    await cleanup();
     return response({error:'No se pudo guardar el envío. Intentá nuevamente.'},500);
   }
   return response({id,status:'pending_analysis',message:'Recibido en cuarentena. No se publicará antes del análisis y la revisión.'},202);

@@ -2,6 +2,9 @@
 
 ## Estado actual (prelanzamiento)
 
+- Audio y portadas responden `Cache-Control: no-store`: cada nueva solicitud debe volver a validar publicación y análisis limpio. El cambio no elimina descargas previas ni cachés de versiones anteriores. Verificados Range, HEAD, retirada y revocación del veredicto en pruebas locales con SQLite y almacenamiento sintético; no acredita comportamiento del CDN productivo.
+- El límite de cinco MP3 en 24 horas se revalida en la misma transacción que inserta la ficha y registra el envío. Si un envío concurrente agotó la cuota, se responde 429, no se audita un envío falso y se intenta retirar ambos objetos privados. Los fallos de borrado siguen requiriendo reconciliación operativa.
+
 - El ingreso revalida hash, sal y correo verificado dentro de la transacción de creación de sesión. Si una recuperación cambió las credenciales después de su lectura inicial, se rechaza el ingreso sin emitir cookie ni podar sesiones. Requiere ensayo con D1 real antes de activar cuentas.
 - La revocación de sesiones de recuperación depende del cambio efectivo de contraseña en la sentencia anterior de la misma transacción (`changes()>0`), sin una segunda evaluación independiente de vencimiento. Una falla de persistencia revierte contraseña, sesiones y consumo del token; verificado con SQLite local.
 - Recuperación y reenvío de verificación revalidan la espera de 15 minutos y el estado de verificación del usuario en la escritura SQL. Solicitudes concurrentes no rotan el token dos veces ni disparan dos correos en la misma ventana. Pruebas con proveedor simulado, sin envío externo real.

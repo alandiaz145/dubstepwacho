@@ -66,7 +66,7 @@ async function validUpload(){
 test('bounded multipart upload stores private objects and audits pending analysis only',async()=>{
   const env=environment(),stored=[],batches=[];
   env.PRIVATE_MUSIC.put=async(key,value)=>{stored.push({key,size:value.length});};
-  env.DB.batch=async statements=>{batches.push(statements);};
+  env.DB.batch=async statements=>{batches.push(statements);return [{meta:{changes:1}},{meta:{changes:1}}];};
   const result=await submit({env,request:await validUpload()});
   assert.equal(result.status,202);
   const data=await result.json();
