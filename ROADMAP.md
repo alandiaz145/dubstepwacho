@@ -9,6 +9,13 @@ Actualizado el 14 de noviembre de 2026. Resultados locales; no acreditan funcion
 - Validación local de esta rama: build correcto, seguridad 89/89, Sites 4/4, runtime Cloudflare 3/3, Chromium 22/22 y npm audit sin vulnerabilidades reportadas. Datos sintéticos, correo y Turnstile interceptados; sin archivos privados ni credenciales productivas.
 - El PR de continuación apunta a `main` y depende del #2: revisar primero el #2 y volver a comprobar el diff restante después de su merge. Ningún PR se fusiona automáticamente.
 
+## Continuación local — evidencia de análisis e inventario
+
+- Rama `feat/private-scan-result-validation`, dependiente del PR #3: validador puro de resultados que comprueba identidad/intento/versión, hashes/tamaños de ambos archivos, cronología y vigencia de firmas con política explícita. Un veredicto no limpio nunca produce `allClean`.
+- Comparador de inventarios sólo de recuentos: distingue faltantes, tamaños diferentes y objetos sin referencia, con período de gracia obligatorio. Sin adaptador D1/R2 ni capacidad de borrado.
+- Diez pruebas sintéticas nuevas. Build correcto, seguridad 99/99, runtime local 3/3 y Sites 4/4. No se modificó frontend; Chromium 22/22 corresponde al ciclo anterior.
+- Ambos módulos permanecen desconectados de rutas, escáneres y almacenamiento. Autenticación del ejecutor, transacción/idempotencia y conectores requieren otra implementación y revisión.
+
 ## Prioridad 1 — cuentas y recuperación
 
 Preparados: verificación de correo, reenvío, recuperación con revocación de sesiones, límites por IP/operación, sesiones acotadas y transacciones contra carreras. El frontend conserva errores accesibles y renueva desafíos consumidos o vencidos.
@@ -67,6 +74,6 @@ Pendientes:
 1. Completar pruebas de accesibilidad y errores de red en formularios restantes, conservando las banderas cerradas.
 2. Revisar estados de error y cancelación de otras lecturas privadas, sin ampliar permisos.
 3. Medir carga inicial e imágenes y corregir mejoras técnicas que preserven la identidad visual.
-4. Derivar del contrato del escáner un validador puro de resultados y pruebas sintéticas; sin endpoint ni conexiones a producción o terceros.
+4. Probar la futura transición de análisis con SQLite aislado: consumo idempotente, estado vigente y rollback de auditoría. No incorporar endpoints ni mecanismos para otorgar `clean` hasta revisar la autenticación del ejecutor.
 
 Los bloqueos externos no impiden estas tareas. La publicación permanece sujeta a revisión humana, respaldo verificado y validación real descrita en [release-validation.md](docs/release-validation.md).

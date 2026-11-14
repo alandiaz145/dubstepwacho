@@ -45,3 +45,22 @@ Los candidatos sin referencia necesitan período de gracia y segunda comprobaci�
 - Fallos de red, motor, almacenamiento y límites de recursos; todos conservan el bloqueo.
 - Reconciliación con upload concurrente y objeto huérfano; la primera versión debe ser sólo informe.
 - Revisión independiente de permisos, costos, privacidad, retención y apagado antes de conectar recursos reales.
+
+## Preparación local implementada (sin conexión)
+
+`lib/scanEvidence.js` exporta `validateScanEvidence({job,result,now,maxSignatureAgeMs})`. Es una función pura y no está importada por endpoints, worker ni frontend. Recibe JSON ya parseado y un snapshot de trabajo confiable; la autenticidad del resultado **no** se verifica aquí. El reloj y la edad máxima de firmas son obligatorios, en milisegundos, sin elegir una política de producción.
+
+El esquema inicial es estricto: sin campos adicionales ni cadenas libres de diagnóstico. Los identificadores son opacos de hasta 128 caracteres alfanuméricos, guion o guion bajo; motor/versiones admiten también punto, dos puntos y signo más. Los hashes son SHA-256 hexadecimal en minúsculas y los tamaños enteros positivos seguros.
+
+- `job`: `id`, `attempt` positivo, `trackId`, `objectVersion`, `createdAt`, `expiresAt`, `objects`.
+- `result`: `jobId`, `attempt`, `trackId`, `objectVersion`, `startedAt`, `finishedAt`, `engine`, `objects`.
+- `engine`: `name`, `version`, `signatureVersion`, `signatureUpdatedAt`.
+- Ambos `objects` contienen exactamente `audio` y `cover`, cada uno con `sha256` y `size`; los del resultado añaden `verdict`: `clean`, `detected`, `invalid`, `error` o `expired`.
+
+La respuesta es `{valid:false,code}` o `{valid:true,allClean}`. Un resultado bien formado con `error` o `detected` es evidencia válida, pero `allClean` es falso. Incluso `allClean:true` no autoriza una transición: siguen pendientes autenticación del ejecutor, estado vigente de la pista, consumo del trabajo, idempotencia y auditoría atómica. No usar el validador como sustituto de esas barreras.
+
+`lib/privateInventory.js` exporta `summarizePrivateInventory({references,objects,now,gracePeriodMs})`. Compara snapshots completos suministrados por un futuro adaptador de confianza. `references` contiene `{key,size}`; `objects`, `{key,size,uploadedAt}` con fecha en milisegundos o `null` si se desconoce. No consulta D1/R2, no verifica hashes de bytes y no puede determinar si un snapshot está completo o actualizado.
+
+Devuelve únicamente recuentos de referencias presentes, objetos faltantes, tamaños distintos y objetos sin referencia recientes, antiguos para revisar o de edad desconocida. Fechas futuras se retienen como desconocidas. Duplicados o entradas inválidas rechazan el informe con un error genérico sin claves. Ningún recuento habilita borrado: faltan revisión de retención y una segunda comprobación actual de referencias, especialmente ante subidas concurrentes.
+
+Las pruebas de ambos módulos son sintéticas. No constituyen análisis de malware, autenticación de resultados ni una reconciliación real del bucket.

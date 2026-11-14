@@ -2,6 +2,9 @@
 
 ## Estado actual (prelanzamiento)
 
+- Preparación offline del escáner en `lib/scanEvidence.js`: valida consistencia de evidencia contra trabajo esperado y política temporal explícita, pero no autentica resultados ni autoriza cambios de estado. No se importa en rutas productivas. `allClean` no sustituye autenticación, estado vigente, idempotencia ni auditoría transaccional.
+- `lib/privateInventory.js` compara snapshots suministrados y devuelve sólo recuentos; no conecta con D1/R2 ni borra archivos. Período de gracia obligatorio; antigüedad desconocida o futura no habilita revisión por edad. Incluso los objetos antiguos requieren comprobación actual y política de retención aprobada. No se inventó una política productiva.
+
 - Reenvío y recuperación en la interfaz conservan respuestas genéricas y requieren configuración habilitada y un desafío Turnstile fresco. Cada intento y cambio de diálogo descarta el token anterior; expiración y errores del widget bloquean el envío. Pruebas Chromium usan desafíos y correo simulados, sin alterar banderas del servidor.
 - HTTP 401 en consultas/acciones administrativas o subidas limpia la cuenta visible y vuelve al ingreso. HTTP 403 administrativo elimina canciones e historial de la interfaz y muestra pérdida de permisos; las respuestas de consultas anteriores quedan invalidadas. El servidor sigue siendo la autoridad de permisos; la limpieza de interfaz no revoca copias ya recibidas.
 
