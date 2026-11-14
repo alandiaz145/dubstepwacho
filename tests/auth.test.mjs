@@ -31,13 +31,13 @@ test('binding a database does not activate accounts by itself',()=>{
 test('session creation prunes old sessions and commits atomically',async()=>{
   const statements=[];
   const db={prepare(sql){return {bind(...args){return {sql,args}}}},async batch(batch){statements.push(...batch);return [{meta:{changes:0}},{meta:{changes:1}}]}};
-  const token=await createSession(db,'artist-1');
+  const token=await createSession(db,'artist-1',{hash:'hash',salt:'salt'});
   assert.match(token,/^[a-f0-9]{64}$/);
   assert.equal(statements.length,2);
   assert.match(statements[0].sql,/expires_at<=\?/);
   assert.match(statements[0].sql,/OFFSET 9/);
   assert.match(statements[1].sql,/INSERT INTO sessions/);
-  assert.equal(statements[1].args[1],'artist-1');
+  assert.equal(statements[1].args[2],'artist-1');
 });
 test('registration challenge fails closed without credentials or a valid token', async()=>{
   const request=new Request('https://dubstepwacho.pages.dev/api/auth/register');

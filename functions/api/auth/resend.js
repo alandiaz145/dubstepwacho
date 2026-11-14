@@ -17,8 +17,12 @@ export async function onRequestPost({request,env}) {
     WHERE users.email=? AND users.email_verified_at IS NULL`).bind(email).first();
   if(!user||Number(user.sent_at)>Math.floor(Date.now()/1000)-900)return generic();
   const verification=await newEmailToken();
-  await env.DB.prepare('UPDATE email_verifications SET token_hash=?,expires_at=?,sent_at=? WHERE user_id=?')
-    .bind(verification.tokenHash,verification.expiresAt,Math.floor(Date.now()/1000),user.id).run();
+  const now=Math.floor(Date.now()/1000);
+  const saved=await env.DB.prepare(`UPDATE email_verifications SET token_hash=?,expires_at=?,sent_at=?
+    WHERE user_id=? AND sent_at<=? AND EXISTS (
+      SELECT 1 FROM users WHERE id=? AND email_verified_at IS NULL)`)
+    .bind(verification.tokenHash,verification.expiresAt,now,user.id,now-900,user.id).run();
+  if(saved.meta?.changes!==1)return generic();
   await sendVerificationEmail(env,{to:email,displayName:user.display_name,token:verification.token,origin:new URL(request.url).origin});
   return generic();
 }
