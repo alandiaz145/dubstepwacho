@@ -11,7 +11,7 @@ Actualizado el 14 de noviembre de 2026. Resultados locales; no acreditan funcion
 
 ## Continuación local — evidencia de análisis e inventario
 
-- Rama `feat/private-scan-result-validation`, dependiente del PR #3: validador puro de resultados que comprueba identidad/intento/versión, hashes/tamaños de ambos archivos, cronología y vigencia de firmas con política explícita. Un veredicto no limpio nunca produce `allClean`.
+- PR [#4](https://github.com/alandiaz145/dubstepwacho/pull/4), en borrador, rama `feat/private-scan-result-validation`, dependiente del PR #3: validador puro de resultados que comprueba identidad/intento/versión, hashes/tamaños de ambos archivos, cronología y vigencia de firmas con política explícita. Un veredicto no limpio nunca produce `allClean`.
 - Comparador de inventarios sólo de recuentos: distingue faltantes, tamaños diferentes y objetos sin referencia, con período de gracia obligatorio. Sin adaptador D1/R2 ni capacidad de borrado.
 - Diez pruebas sintéticas nuevas. Build correcto, seguridad 99/99, runtime local 3/3 y Sites 4/4. No se modificó frontend; Chromium 22/22 corresponde al ciclo anterior.
 - Ambos módulos permanecen desconectados de rutas, escáneres y almacenamiento. Autenticación del ejecutor, transacción/idempotencia y conectores requieren otra implementación y revisión.
