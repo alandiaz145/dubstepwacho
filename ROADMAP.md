@@ -4,6 +4,17 @@ Estado al 13 de noviembre de 2026. Este documento separa lo implementado de lo q
 
 ## Registro del ciclo autónomo actual
 
+### Ciclo del 14 de noviembre de 2026 — propuesta en rama para revisión
+
+- Base inspeccionada: `main` en `9ab01e9`; cambios propuestos mediante PR, sin commits directos a `main`, merge ni despliegue.
+- Lector JSON compartido endurecido: límite de 8192 bytes aplicado durante la lectura, cancelación del stream al excederlo, UTF-8 estricto y rechazo de `null`, arrays y valores primitivos. Evita errores internos en autenticación y moderación y lectura completa de solicitudes excesivas sin Content-Length. Cuatro regresiones verifican límites exactos, caracteres multibyte, cancelación y HTTP 400 en login/recuperación.
+- Corregida la prueba de configuración pública: habilitar registro requiere también correo transaccional configurado. No se relajó el servidor ni se configuró ningún proveedor.
+- Dos pruebas con esquema SQLite real verifican sesiones vencidas, tokens malformados/desconocidos, correo sin verificar, rechazo de logout desde otro origen, revocación selectiva e idempotencia.
+- Verificación local con Node 24.22.1: 52/52 pruebas de seguridad y lógica correctas; Sites 3/4 correctas, con fallo de empaquetado preexistente.
+- Bloqueo reproducido desde checkout limpio: falta `.openai/hosting.json` en `main`. Vite compila, pero `npm run build` falla en `prepare-sites-build.mjs`; la prueba de empaquetado Sites también falla por los artefactos ausentes. Recuperar la configuración original aprobada antes de considerar build y Sites verificados; no se inventó configuración ni se omitió la prueba fallida.
+- Vista local iniciada en puerto 5173. El navegador compartido no pudo abrirse: `the gaas-browser node_repl sandbox cannot be disabled`. La prueba manual de foco sigue pendiente; no equivale a una validación de Safari iPhone.
+- Próximos pasos: restaurar configuración original de hosting, repetir build/suite completa y probar los diálogos en navegador funcional. Continúan bloqueados el respaldo independiente verificado de D1, migraciones 0003–0006, correo/Turnstile real y escáner privado. No se activaron Actions, servicios pagos, registros ni subidas.
+
 - Cloudflare D1 real inspeccionado en `dubstepwacho-db`: actualmente existen las tablas iniciales `users`, `sessions`, `auth_attempts`, `artist_profiles`, `tracks` y `moderation_events`; `users` carece de `email_verified_at`. Se obtuvo bookmark Time Travel del estado previo, sin modificar registros. El respaldo independiente sigue pendiente: la consola visual no ofrece exportación SQL, y este entorno no tiene credenciales de API/Wrangler configuradas. No ejecutar `ALTER TABLE` ni otras migraciones antes de exportar y verificar el backup. Las seis migraciones se ejecutaron con éxito en SQLite local en el orden 0001–0006; no equivalen a su aplicación en D1 productivo.
 - Reglas de continuidad incorporadas en `AGENTS.md`; el repositorio `main` sigue siendo la referencia y no se alteró la identidad visual.
 - Endurecidos los enlaces de verificación de correo y recuperación de contraseña: la transacción revalida el token vigente para impedir que dos solicitudes paralelas utilicen el mismo enlace. Tests de regresión añadidos.

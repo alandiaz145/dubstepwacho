@@ -2,6 +2,8 @@
 
 ## Estado actual (prelanzamiento)
 
+- Las solicitudes JSON de cuentas y decisiones de moderación se limitan a 8192 bytes durante la lectura del stream; se cancela el cuerpo excesivo y se rechazan UTF-8 inválido, arrays, `null` y valores primitivos con HTTP 400. Esta verificación es local y no acredita despliegue productivo.
+
 - `AUTH_ENABLED` no está activado: no se admiten registros ni sesiones públicas.
 - El registro exige `TURNSTILE_SECRET_KEY` y verifica cada token contra Siteverify, con comprobación de hostname. Si falta el token, venció, falla la red o no hay credencial, el servidor rechaza el registro. Esta barrera no habilita las cuentas por sí sola.
 - El formulario de registro consulta `/api/auth/config` para obtener únicamente la clave pública `TURNSTILE_SITE_KEY`. La clave secreta nunca se entrega al navegador. El botón de registro permanece bloqueado hasta recibir un token de desafío; si falla el envío, debe resolverse uno nuevo.

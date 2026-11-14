@@ -45,9 +45,28 @@ export const throttle = async (db,request,scope,maximum=6) => {
 };
 export const body = async request => {
   if (Number(request.headers.get('content-length') || 0) > 8192) throw Error('body_too_large');
-  const raw = await request.text();
-  if (raw.length > 8192) throw Error('body_too_large');
-  return JSON.parse(raw);
+  const reader = request.body?.getReader();
+  if (!reader) throw Error('invalid_body');
+  const chunks = [];
+  let size = 0;
+  try {
+    while (true) {
+      const {done,value} = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > 8192) {
+        await reader.cancel();
+        throw Error('body_too_large');
+      }
+      chunks.push(value);
+    }
+  } finally { reader.releaseLock(); }
+  const data = new Uint8Array(size);
+  let offset = 0;
+  for (const chunk of chunks) { data.set(chunk,offset); offset += chunk.byteLength; }
+  const input = JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(data));
+  if (!input || typeof input !== 'object' || Array.isArray(input)) throw Error('invalid_body');
+  return input;
 };
 export const hashPassword = async password => {
   const salt = hex(bytes(16));
