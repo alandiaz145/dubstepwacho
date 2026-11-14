@@ -16,6 +16,13 @@ Actualizado el 14 de noviembre de 2026. Resultados locales; no acreditan funcion
 - Diez pruebas sintéticas nuevas. Build correcto, seguridad 99/99, runtime local 3/3 y Sites 4/4. No se modificó frontend; Chromium 22/22 corresponde al ciclo anterior.
 - Ambos módulos permanecen desconectados de rutas, escáneres y almacenamiento. Autenticación del ejecutor, transacción/idempotencia y conectores requieren otra implementación y revisión.
 
+## Continuación local — carga inicial y accesibilidad
+
+- Rama `perf/defer-secondary-panels`, basada en el PR #4: EPs y moderación se descargan al abrirlos, con espera accesible y recuperación explícita por recarga si falla el chunk. Portadas lejanas se aplazan; imagen principal y reproductor conservan carga inmediata. Las fuentes existentes se descubren desde HTML.
+- JavaScript de entrada: 234.599 → 229.651 bytes (aproximadamente −2,1%); gzip 73,37 → 72,19 KB. No es una medición de latencia ni rendimiento productivo. Capturas locales con fuentes externas interceptadas idénticas en escritorio/móvil; arte sin cambios. Detalle en [frontend-performance.md](docs/frontend-performance.md).
+- Nombres accesibles explícitos para búsquedas/filtros, tema de prueba y cierre de cola; movimiento reducido respetado. No se habilitó comunidad persistente.
+- Build correcto; Chromium 29/29, seguridad 99/99, runtime local 3/3 y Sites 4/4. El navegador ahora incluye preview del build y requiere compilar antes de ejecutar la suite. Sin dependencias nuevas, migraciones ni despliegue.
+
 ## Prioridad 1 — cuentas y recuperación
 
 Preparados: verificación de correo, reenvío, recuperación con revocación de sesiones, límites por IP/operación, sesiones acotadas y transacciones contra carreras. El frontend conserva errores accesibles y renueva desafíos consumidos o vencidos.
@@ -73,7 +80,7 @@ Pendientes:
 
 1. Completar pruebas de accesibilidad y errores de red en formularios restantes, conservando las banderas cerradas.
 2. Revisar estados de error y cancelación de otras lecturas privadas, sin ampliar permisos.
-3. Medir carga inicial e imágenes y corregir mejoras técnicas que preserven la identidad visual.
+3. Medir LCP, consumo y fuentes reales en un entorno de prueba autorizado; contrastar con la medición local de tamaños ya documentada. La prueba física de Safari y lector de pantalla sigue pendiente.
 4. Probar la futura transición de análisis con SQLite aislado: consumo idempotente, estado vigente y rollback de auditoría. No incorporar endpoints ni mecanismos para otorgar `clean` hasta revisar la autenticación del ejecutor.
 
 Los bloqueos externos no impiden estas tareas. La publicación permanece sujeta a revisión humana, respaldo verificado y validación real descrita en [release-validation.md](docs/release-validation.md).
