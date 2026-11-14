@@ -1,8 +1,9 @@
-import {response,throttle} from '../_auth.js';
+import {readBoundedBody,response,throttle} from '../_auth.js';
 import {coverType,genres,isMp3,requireMutation,requireUser,sha256} from '../_tracks.js';
 
 const MAX_MP3=10*1024*1024;
 const MAX_COVER=3*1024*1024;
+const MAX_REQUEST=MAX_MP3+MAX_COVER+65536;
 
 export async function onRequestPost({request,env}) {
   const originError=requireMutation(request);
@@ -10,14 +11,20 @@ export async function onRequestPost({request,env}) {
   const {user,error}=await requireUser(request,env,'artist');
   if(error) return error;
   if(env.UPLOADS_ENABLED!=='true') return response({error:'La recepción de música está pendiente de habilitación.'},503);
-  if(!env.PRIVATE_MUSIC?.put) return response({error:'La recepción segura de música aún no está configurada.'},503);
+  if(!env.PRIVATE_MUSIC?.put||!env.PRIVATE_MUSIC?.delete) return response({error:'La recepción segura de música aún no está configurada.'},503);
   const size=Number(request.headers.get('content-length'));
-  if(!Number.isSafeInteger(size)||size<1||size>MAX_MP3+MAX_COVER+65536) return response({error:'La carga supera el tamaño permitido.'},413);
+  if(!Number.isSafeInteger(size)||size<1||size>MAX_REQUEST) return response({error:'La carga supera el tamaño permitido.'},413);
   if(!await throttle(env.DB,request,`track-${user.id}`,8)) return response({error:'Alcanzaste el límite temporal de envíos.'},429);
   const submissions=await env.DB.prepare("SELECT COUNT(*) AS count FROM tracks WHERE user_id=? AND created_at>datetime('now','-1 day')").bind(user.id).first();
   if(submissions.count>=5) return response({error:'Límite de cinco canciones por día.'},429);
   let form;
-  try{form=await request.formData()}catch{return response({error:'Formulario inválido.'},400)}
+  try{
+    const payload=await readBoundedBody(request,MAX_REQUEST);
+    form=await new Response(payload,{headers:{'Content-Type':request.headers.get('Content-Type')||''}}).formData();
+  }catch(error){
+    if(error.message==='body_too_large')return response({error:'La carga supera el tamaño permitido.'},413);
+    return response({error:'Formulario inválido.'},400);
+  }
   const title=String(form.get('title')||'').trim().slice(0,160);
   const artist=String(form.get('artist')||'').trim().slice(0,100);
   const genre=String(form.get('genre')||'');
@@ -45,7 +52,7 @@ export async function onRequestPost({request,env}) {
         .bind(crypto.randomUUID(),id,user.id,'submitted')
     ]);
   }catch{
-    await Promise.allSettled([env.PRIVATE_MUSIC.delete(audioKey),env.PRIVATE_MUSIC.delete(coverKey)]);
+    await Promise.allSettled([audioKey,coverKey].map(key=>Promise.resolve().then(()=>env.PRIVATE_MUSIC.delete(key))));
     return response({error:'No se pudo guardar el envío. Intentá nuevamente.'},500);
   }
   return response({id,status:'pending_analysis',message:'Recibido en cuarentena. No se publicará antes del análisis y la revisión.'},202);

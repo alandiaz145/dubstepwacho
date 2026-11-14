@@ -43,8 +43,8 @@ export const throttle = async (db,request,scope,maximum=6) => {
   if(Math.random()<1/128)try{await pruneAuthAttempts(db,now)}catch{}
   return row.count<=maximum;
 };
-export const body = async request => {
-  if (Number(request.headers.get('content-length') || 0) > 8192) throw Error('body_too_large');
+export const readBoundedBody = async (request,maximum) => {
+  if (Number(request.headers.get('content-length') || 0) > maximum) throw Error('body_too_large');
   const reader = request.body?.getReader();
   if (!reader) throw Error('invalid_body');
   const chunks = [];
@@ -54,7 +54,7 @@ export const body = async request => {
       const {done,value} = await reader.read();
       if (done) break;
       size += value.byteLength;
-      if (size > 8192) {
+      if (size > maximum) {
         await reader.cancel();
         throw Error('body_too_large');
       }
@@ -64,7 +64,10 @@ export const body = async request => {
   const data = new Uint8Array(size);
   let offset = 0;
   for (const chunk of chunks) { data.set(chunk,offset); offset += chunk.byteLength; }
-  const input = JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(data));
+  return data;
+};
+export const body = async request => {
+  const input = JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(await readBoundedBody(request,8192)));
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw Error('invalid_body');
   return input;
 };
