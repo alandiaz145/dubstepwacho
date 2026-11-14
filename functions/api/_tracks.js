@@ -15,7 +15,8 @@ export const coverType=bytes=>{
 export const sha256=async bytes=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),v=>v.toString(16).padStart(2,'0')).join('');
 export const requireUser=async(request,env,role)=>{
   if(!ready(env)) return {error:unavailable()};
-  const user=await currentUser(request,env.DB);
+  let user;
+  try{user=await currentUser(request,env.DB)}catch{return {error:response({error:'No se pudo comprobar la sesión.'},503)}}
   if(!user) return {error:response({error:'Iniciá sesión para continuar.'},401)};
   if(role&&user.role!==role&&user.role!=='admin') return {error:response({error:'No tenés permisos para esta acción.'},403)};
   return {user};

@@ -3,12 +3,16 @@
 ## Autonomous development continuity
 
 - Treat GitHub `alandiaz145/dubstepwacho` on `main` as the durable source of truth. At the start of each development cycle, read this file, `ROADMAP.md`, and `SECURITY.md`, inspect the latest code and commits, and select the next independently authorized task.
-- Work in cycles: inspect dependencies, implement a bounded change, add/update tests, run the relevant suite and production build, verify the result, commit with a descriptive message to `main`, update the roadmap, and continue with the next safe task. Do not stop merely because one stage is complete.
+- Work in cycles: inspect dependencies, implement a bounded change, add/update tests, run the relevant suite and production build, verify the result, commit with a descriptive message to an isolated branch, open or update a descriptive pull request targeting `main`, update the roadmap, and continue with the next safe task. Never push technical changes directly to `main`, merge without human review, or deploy sensitive changes automatically. Do not stop merely because one stage is complete.
 - Prioritize account security and recovery; then private uploads, moderation and playback; then EPs, artist profiles and community; then mobile performance and accessibility; then integration QA. Preserve Alan's approved visual identity, artwork and promotional copy; Alan owns final artistic decisions.
 - Ordinary technical changes, tests, refactoring, documentation and GitHub commits are authorized. Do not enable public registration, user uploads, paid services, public distribution of unpublished works, production-writing scheduled agents, or new privileged integrations without separate authorization and verified safeguards.
 - When blocked by credentials, Cloudflare configuration, costs, commercial decisions or physical-device testing, record the exact blocker and a safe next step in `ROADMAP.md`, then work on another independent task. Never bypass permissions or invent successful production verification.
 - Keep `ROADMAP.md` current with completed functionality, bugs, blocked tasks, test results and the next recommended action. Update `SECURITY.md` for security-relevant decisions. Keep credential values out of repositories, logs and replies.
 - Future scheduled coding agents are design-only until Alan explicitly authorizes their permissions, spending and production effects. See `AUTOMATION.md`.
+
+For account, D1, R2 or streaming changes, run `npm run test:runtime` on Node.js 24 as well as the existing suites. This uses isolated local Miniflare/workerd bindings and synthetic data, never production credentials or live email. Keep the test-only route adapter under `tests/runtime/` out of deployment bundles.
+
+For frontend playback or dialog changes, also run `npm run test:browser`. It uses playwright-core with installed Chromium (`DW_CHROMIUM_PATH` overrides `/usr/bin/chromium`), a local Vite server, intercepted APIs and synthetic WAV audio. It is not an iPhone Safari or real MP3 compatibility check.
 
 Run the local server yourself and open the preview in the browser available to this environment. Do not give the user server-start instructions when you can run it.
 
@@ -16,7 +20,7 @@ Before making substantial visual changes, use the Product Design plugin's `get-c
 
 When implementing from a selected generated mock, treat that image as the source of truth for layout, component anatomy, density, spacing, color, typography, visible content, and hierarchy.
 
-Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts/prepare-sites-build.mjs`, and `tests/sites-worker.test.mjs` intact so the same local prototype can be handed to Sites. Before a Sites handoff, run `npm run build` and `npm run test:sites`; the build must leave `dist/client/index.html`, `dist/server/index.js`, and `dist/.openai/hosting.json`.
+Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts/prepare-sites-build.mjs`, and `tests/sites-worker.test.mjs` intact so the same local prototype can be handed to Sites. The local manifest is deliberately unassociated (no `project_id`) and declares static frontend output only; it does not deploy Pages Functions or bind production D1/R2. Do not invent an ID or treat a green build as deployment authorization. Before a Sites handoff, run `npm run build` and `npm run test:sites`; the build must leave `dist/client/index.html`, `dist/server/index.js`, and `dist/.openai/hosting.json`.
 
 ## Durable product decisions (2026-11-13)
 

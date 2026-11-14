@@ -34,5 +34,5 @@ test('password reset rejects a token consumed by a concurrent request',async()=>
   const token=await newEmailToken(),db=database({user_id:'u1'},0);
   const result=await reset({request:request(token.token,'a-good-passphrase-2026'),env:{AUTH_ENABLED:'true',DB:db}});
   assert.equal(result.status,409);
-  assert.ok(db.statements.some(s=>s.sql.includes('DELETE FROM sessions')&&s.sql.includes('token_hash=?')));
+  assert.ok(db.statements.some(s=>s.sql.includes('DELETE FROM sessions')&&s.sql.includes('changes()>0')));
 });

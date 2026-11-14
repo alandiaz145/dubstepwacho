@@ -8,7 +8,9 @@ globalThis.crypto ??= webcrypto;
 
 function database(){
   const sql=new DatabaseSync(':memory:');
-  sql.exec(`CREATE TABLE auth_attempts(key TEXT PRIMARY KEY,count INTEGER NOT NULL,window_start INTEGER NOT NULL);
+  sql.exec(`CREATE TABLE users(id TEXT PRIMARY KEY,password_hash TEXT,password_salt TEXT,email_verified_at TEXT);
+    INSERT INTO users VALUES ('artist-1','hash','salt','verified'),('artist-2','hash','salt','verified');
+    CREATE TABLE auth_attempts(key TEXT PRIMARY KEY,count INTEGER NOT NULL,window_start INTEGER NOT NULL);
     CREATE TABLE sessions(token_hash TEXT PRIMARY KEY,user_id TEXT NOT NULL,expires_at INTEGER NOT NULL,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
     CREATE INDEX idx_sessions_user ON sessions(user_id);`);
@@ -45,12 +47,12 @@ test('SQLite rate limiter enforces a window per IP and operation',async()=>{
 test('SQLite account sessions stay within ten after repeated logins',async()=>{
   const {sql,DB}=database();
   try{
-    for(let i=0;i<13;i++)await createSession(DB,'artist-1');
+    for(let i=0;i<13;i++)await createSession(DB,'artist-1',{hash:'hash',salt:'salt'});
     assert.equal(sql.prepare('SELECT count(*) AS n FROM sessions WHERE user_id=?').get('artist-1').n,10);
     sql.prepare('UPDATE sessions SET expires_at=0 WHERE user_id=?').run('artist-1');
-    await createSession(DB,'artist-1');
+    await createSession(DB,'artist-1',{hash:'hash',salt:'salt'});
     assert.equal(sql.prepare('SELECT count(*) AS n FROM sessions WHERE user_id=?').get('artist-1').n,1);
-    await createSession(DB,'artist-2');
+    await createSession(DB,'artist-2',{hash:'hash',salt:'salt'});
     assert.equal(sql.prepare('SELECT count(*) AS n FROM sessions WHERE user_id=?').get('artist-2').n,1);
   }finally{sql.close()}
 });
