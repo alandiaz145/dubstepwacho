@@ -2,6 +2,9 @@
 
 ## Estado actual (prelanzamiento)
 
+- Si falla consultar una sesión en D1, los endpoints protegidos responden 503 genérico y no continúan hacia lectura privada o mutaciones. Audio/portada capturan errores de búsqueda/apertura D1/R2, responden sin detalles internos y con `no-store`; HEAD conserva cuerpo vacío también ante errores. Fallos de transmisión posteriores al envío de encabezados no se convierten retroactivamente en un HTTP 503.
+- Runtime local ampliado: subida multipart en R2 privado, moderación/publicación/retirada e historial, con permisos y origen comprobados y rollback si falla auditoría. El veredicto limpio es una simulación explícita de fixture en D1 local, no un escáner. Lecturas EP también probadas contra D1 local con estados privados, retirada y archivo; sin binding, el índice responde 503 con lista vacía.
+
 - Integración local adicional con Miniflare/workerd: migraciones 0001–0006 sobre D1 efímero, registro/verificación, ingreso, recuperación y revocación de múltiples sesiones, logout y audio Range/HEAD/416 desde R2 local con retirada. Turnstile y correo se interceptan; nunca se usan credenciales productivas ni envío real. No equivale a ensayo con D1/R2 productivos ni Safari.
 - Dependencias de herramientas: Vite actualizado a 6.4.6; lockfile renovado para versiones corregidas de dependencias transitivas. Miniflare de desarrollo fijado a 4.20260730.0 con overrides de parche para sharp 0.35.5 y undici 7.30.2 por avisos de seguridad del árbol original. `npm audit --audit-level=high` reportó cero vulnerabilidades tras los cambios; es el resultado del catálogo consultado, no una garantía absoluta.
 

@@ -37,7 +37,7 @@ npm audit --audit-level=high
 
 El build y la prueba de empaquetado Sites requieren el manifiesto original `.openai/hosting.json`, actualmente ausente del repositorio. Vite compila, pero el empaquetado completo sigue bloqueado hasta recuperar su configuración aprobada. No inventar un identificador de Site ni omitir la prueba para ocultar el fallo.
 
-`test:security` incluye pruebas con SQLite real y requiere los artefactos del build para la comprobación Sites. `test:runtime` ejecuta los handlers reales en Miniflare/workerd con D1/R2 efímeros locales: aplica las migraciones sólo a esa base aislada y comprueba cuentas, sesiones y streaming. Intercepta Turnstile y correo; no requiere credenciales, no envía correos y no accede a producción. El adaptador de rutas en `tests/runtime/` es sólo de pruebas y no se publica.
+`test:security` incluye pruebas con SQLite real y requiere los artefactos del build para la comprobación Sites. `test:runtime` ejecuta los handlers reales en Miniflare/workerd con D1/R2 efímeros locales: aplica las migraciones sólo a esa base aislada y comprueba cuentas, sesiones, subida privada, moderación, auditoría, EPs y streaming. El veredicto de análisis limpio es una simulación explícita de fixture; el escáner real sigue pendiente. Intercepta Turnstile y correo; no requiere credenciales, no envía correos y no accede a producción. El adaptador de rutas en `tests/runtime/` es sólo de pruebas y no se publica.
 
 Estas verificaciones no sustituyen un ensayo con los bindings productivos ni las pruebas manuales de reproducción y avance en Safari iPhone. Para comprobaciones externas de sólo lectura existe `npm run check:public`; no autoriza escrituras ni pruebas de carga.
 
