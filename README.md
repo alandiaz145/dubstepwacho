@@ -1,50 +1,48 @@
 # DUBSTEPWACHO
 
-Prototipo responsive de la plataforma comunitaria de Dubstep y Bass Music latinoamericana.
+Prototipo responsive de la plataforma comunitaria de Dubstep y Bass Music latinoamericana, construido con React y Vite. Conserva la identidad visual lima sobre negro y el arte conceptual aprobado.
 
-## Ejecutar
+## Desarrollo local
+
+Requiere Node.js 24 para las pruebas con `node:sqlite`.
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-## Estado actual
+Vite sirve el frontend. Los endpoints de `functions/api/` son Cloudflare Pages Functions; no se convierten en un backend productivo al iniciar Vite.
 
-La interfaz incluye portada, exploración musical, perfiles ilustrativos, reproductor global, foro, página de distribución y un flujo local de subida/moderación de archivos MP3. El frontend está construido con React y Vite.
+## Estado de seguridad
 
-**Esto sigue siendo un prototipo, no un servicio productivo.** Se incorporaron endpoints de registro, ingreso, sesión y cierre de sesión mediante Cloudflare Pages Functions, junto con una migración D1 de usuarios, sesiones y perfiles de artista. Estos endpoints responden 503 hasta conectar una base D1 con binding `DB`. El formulario público deshabilita registro e ingreso mientras no esté habilitado el servidor.
+**Las cuentas y las subidas públicas permanecen deshabilitadas.** Tener un binding D1 no habilita esas funciones: requieren banderas explícitas y completar las condiciones de [SECURITY.md](SECURITY.md).
 
-La activación pública del registro requiere además revisar limitación de bots, verificación de correo y pruebas integrales. Los perfiles persistentes aún no cuentan con formulario de edición. La publicación y moderación real, el almacenamiento privado y el foro requieren más backend. El formulario MP3 solo mantiene el archivo localmente mientras dura la sesión: no hay subida remota, escaneo antivirus ni aislamiento del contenido. No se deben cargar archivos privados en esta versión.
+El backend implementa verificación de correo, recuperación de contraseña, sesiones limitadas y revocables, Turnstile, recepción privada en cuarentena, moderación con auditoría transaccional, publicación/retirada y streaming público con HTTP Range. Son implementaciones sujetas a pruebas y configuración; no significa que estén operativas en producción.
 
-## Preparación de cuentas (Cloudflare)
+La base productiva es `dubstepwacho-db`. Las migraciones `0003`–`0006` siguen pendientes y no existe todavía un respaldo independiente verificado. **No aplicar migraciones productivas hasta exportar y verificar ese respaldo.** No se debe activar `AUTH_ENABLED` ni `UPLOADS_ENABLED` para resolver fallos de prueba.
 
-1. Crear una base Cloudflare D1 específica para DubstepWacho, sin reutilizar la de Allen KS.
-2. Aplicar `migrations/0001_auth.sql` a esa base.
-3. Asociar esa D1 al proyecto Pages con nombre de binding `DB`, en producción y vistas previas cuando corresponda.
-4. Completar protección anti-bots, verificación de correo, recuperación de contraseña y pruebas de permisos antes de habilitar registro real para visitantes. Solo entonces agregar la variable `AUTH_ENABLED=true`.
-5. Crear un bucket R2 privado separado con binding `PRIVATE_MUSIC`. La recepción seguirá bloqueada hasta asignar `UPLOADS_ENABLED=true`, únicamente después de verificar el análisis automático, los límites de cuota y el sistema de moderación.
+Los MP3 futuros se reciben en R2 privado mediante `PRIVATE_MUSIC`, con límite de 10 MiB por audio y 3 MiB por portada. Sólo se sirve una pista `published` con análisis `clean`; una aprobación humana por sí sola no permite distribución. No existe aún un escáner conectado que autorice el paso a revisión. No enviar material inédito a servicios de análisis públicos.
 
-Los endpoints se encuentran en `functions/api/auth/`; las contraseñas se derivan con PBKDF2 SHA-256 y sal aleatoria, y la sesión se conserva en una cookie HttpOnly, Secure y SameSite=Lax. El rol administrador nunca se puede seleccionar en el registro público.
+Los artistas y lanzamientos precargados son ejemplos ficticios, sin audio reproducible. La portada de *Raíz Bass Vol. I* es arte conceptual del prototipo. Las reglas y fechas del EP real siguen pendientes.
 
-La segunda migración `migrations/0002_tracks.sql` agrega canciones en cuarentena, estado de análisis, decisiones y auditoría. Las funciones `functions/api/tracks/submit.js` y `functions/api/admin/` son la base de recepción y revisión; **no incluyen aún un motor antivirus ni publicación de canciones**. Por seguridad, aprobar una canción exige un resultado `clean` y estado `pending_review`; no existe por ahora una acción pública que marque archivos como limpios.
-
-Los lanzamientos y artistas precargados son ejemplos ficticios; no tienen MP3 reproducibles. La portada de *Raíz Bass Vol. I* es arte conceptual creado para el prototipo.
-
-## Pruebas
+## Verificación
 
 ```bash
 npm run build
+npm run test:security
+npm run test:runtime
 npm run test:sites
-node --test tests/auth.test.mjs
+npm audit --audit-level=high
 ```
 
-La verificación visual quedó pendiente por un fallo de acceso a la vista previa. Antes de un lanzamiento público, probar el progreso del reproductor y la continuidad del audio en Safari de iPhone, Chrome para Android y escritorio.
+El build y la prueba de empaquetado Sites requieren el manifiesto original `.openai/hosting.json`, actualmente ausente del repositorio. Vite compila, pero el empaquetado completo sigue bloqueado hasta recuperar su configuración aprobada. No inventar un identificador de Site ni omitir la prueba para ocultar el fallo.
 
-## Próximas etapas
+`test:security` incluye pruebas con SQLite real y requiere los artefactos del build para la comprobación Sites. `test:runtime` ejecuta los handlers reales en Miniflare/workerd con D1/R2 efímeros locales: aplica las migraciones sólo a esa base aislada y comprueba cuentas, sesiones y streaming. Intercepta Turnstile y correo; no requiere credenciales, no envía correos y no accede a producción. El adaptador de rutas en `tests/runtime/` es sólo de pruebas y no se publica.
 
-1. Autenticación segura y permisos por rol.
-2. PostgreSQL y API de perfiles, temas y canciones.
-3. Cargas a Cloudflare R2 en cuarentena y revisión administrativa del servidor.
-4. Reproductor probado con MP3 públicos, soporte HTTP Range y Safari iOS.
-5. Foro, seguimiento y notificaciones; luego distribución musical.
+Estas verificaciones no sustituyen un ensayo con los bindings productivos ni las pruebas manuales de reproducción y avance en Safari iPhone. Para comprobaciones externas de sólo lectura existe `npm run check:public`; no autoriza escrituras ni pruebas de carga.
+
+## Continuidad
+
+El estado, los resultados y los bloqueos se registran en [ROADMAP.md](ROADMAP.md). Las reglas de desarrollo están en [AGENTS.md](AGENTS.md) y la propuesta de automatización, sin activar, en [AUTOMATION.md](AUTOMATION.md).
+
+Los cambios se proponen mediante ramas y Pull Requests sujetos a revisión humana. No se fusionan ni se despliegan cambios sensibles automáticamente. No activar servicios pagos, registros, subidas ni agentes programados por anticipado.

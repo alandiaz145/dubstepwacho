@@ -10,6 +10,8 @@
 - Keep `ROADMAP.md` current with completed functionality, bugs, blocked tasks, test results and the next recommended action. Update `SECURITY.md` for security-relevant decisions. Keep credential values out of repositories, logs and replies.
 - Future scheduled coding agents are design-only until Alan explicitly authorizes their permissions, spending and production effects. See `AUTOMATION.md`.
 
+For account, D1, R2 or streaming changes, run `npm run test:runtime` on Node.js 24 as well as the existing suites. This uses isolated local Miniflare/workerd bindings and synthetic data, never production credentials or live email. Keep the test-only route adapter under `tests/runtime/` out of deployment bundles.
+
 Run the local server yourself and open the preview in the browser available to this environment. Do not give the user server-start instructions when you can run it.
 
 Before making substantial visual changes, use the Product Design plugin's `get-context` skill when the visual source is unclear or no longer matches the current goal. When the user gives durable prototype-specific design feedback, preferences, or decisions, record them in `AGENTS.md`.

@@ -2,6 +2,9 @@
 
 ## Estado actual (prelanzamiento)
 
+- Integración local adicional con Miniflare/workerd: migraciones 0001–0006 sobre D1 efímero, registro/verificación, ingreso, recuperación y revocación de múltiples sesiones, logout y audio Range/HEAD/416 desde R2 local con retirada. Turnstile y correo se interceptan; nunca se usan credenciales productivas ni envío real. No equivale a ensayo con D1/R2 productivos ni Safari.
+- Dependencias de herramientas: Vite actualizado a 6.4.6; lockfile renovado para versiones corregidas de dependencias transitivas. Miniflare de desarrollo fijado a 4.20260730.0 con overrides de parche para sharp 0.35.5 y undici 7.30.2 por avisos de seguridad del árbol original. `npm audit --audit-level=high` reportó cero vulnerabilidades tras los cambios; es el resultado del catálogo consultado, no una garantía absoluta.
+
 - Audio y portadas responden `Cache-Control: no-store`: cada nueva solicitud debe volver a validar publicación y análisis limpio. El cambio no elimina descargas previas ni cachés de versiones anteriores. Verificados Range, HEAD, retirada y revocación del veredicto en pruebas locales con SQLite y almacenamiento sintético; no acredita comportamiento del CDN productivo.
 - El límite de cinco MP3 en 24 horas se revalida en la misma transacción que inserta la ficha y registra el envío. Si un envío concurrente agotó la cuota, se responde 429, no se audita un envío falso y se intenta retirar ambos objetos privados. Los fallos de borrado siguen requiriendo reconciliación operativa.
 

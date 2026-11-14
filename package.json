@@ -9,13 +9,22 @@
     "preview": "vite preview",
     "test:sites": "node --test tests/sites-worker.test.mjs",
     "test:security": "node --test tests/*.test.mjs",
-    "check:public": "node scripts/check-public-endpoints.mjs"
+    "check:public": "node scripts/check-public-endpoints.mjs",
+    "test:runtime": "node --test tests/runtime/*.test.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-react": "5.0.4",
-    "vite": "6.4.2",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "vite": "6.4.6"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "miniflare": "4.20260730.0"
+  },
+  "overrides": {
+    "miniflare": {
+      "sharp": "0.35.5",
+      "undici": "7.30.2"
+    }
+  }
 }
