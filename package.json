@@ -11,7 +11,8 @@
     "test:security": "node --test tests/*.test.mjs",
     "check:public": "node scripts/check-public-endpoints.mjs",
     "test:runtime": "node --test tests/runtime/*.test.mjs",
-    "test:browser": "node --test tests/browser/*.test.mjs"
+    "test:browser": "node --test tests/browser/*.test.mjs",
+    "verify:backup": "node scripts/verify-d1-backup.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-react": "5.0.4",
