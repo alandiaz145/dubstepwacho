@@ -2,6 +2,10 @@
 
 ## Estado actual (prelanzamiento)
 
+- Recuperación completada ahora limpia también la cuenta de la interfaz y su navegación administrativa, coherente con la revocación de sesiones del servidor; regresión Chromium correcta.
+- Verificador de exports preparado en `scripts/verify-d1-backup.mjs`: opera sólo en memoria, no tiene cliente Cloudflare, restringe operaciones SQL y reporta únicamente metadatos/hash/recuentos. Su éxito no prueba el origen del archivo ni la independencia del almacenamiento. Ver `docs/d1-backup-runbook.md`. El respaldo productivo independiente sigue sin obtenerse/verificarse y las migraciones 0003–0006 permanecen pendientes.
+- Manifiesto de empaquetado local incorporado sin identidad de Site y sin bindings. Un build correcto del frontend no despliega ni configura las Pages Functions, ni autoriza publicar o activar cuentas.
+
 - Si falla consultar una sesión en D1, los endpoints protegidos responden 503 genérico y no continúan hacia lectura privada o mutaciones. Audio/portada capturan errores de búsqueda/apertura D1/R2, responden sin detalles internos y con `no-store`; HEAD conserva cuerpo vacío también ante errores. Fallos de transmisión posteriores al envío de encabezados no se convierten retroactivamente en un HTTP 503.
 - Runtime local ampliado: subida multipart en R2 privado, moderación/publicación/retirada e historial, con permisos y origen comprobados y rollback si falla auditoría. El veredicto limpio es una simulación explícita de fixture en D1 local, no un escáner. Lecturas EP también probadas contra D1 local con estados privados, retirada y archivo; sin binding, el índice responde 503 con lista vacía.
 

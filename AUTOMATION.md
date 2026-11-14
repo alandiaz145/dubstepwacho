@@ -20,7 +20,7 @@ Permitir ciclos de mantenimiento que lean `AGENTS.md`, `ROADMAP.md` y `SECURITY.
 
 - `test:runtime` ejecuta Miniflare/workerd con D1/R2 efímeros locales y tráfico saliente interceptado. Sólo usa datos sintéticos, banderas de prueba en memoria y un adaptador de rutas ubicado en `tests/runtime/`; no requiere ni debe recibir credenciales de Cloudflare ni correo real. No incluir ese adaptador en un despliegue.
 
-- El manifiesto `.openai/hosting.json` debe recuperarse y el build pasar desde un checkout limpio antes del piloto. Su ausencia actual bloquea empaquetado; no crear una identidad de hosting ni saltar pruebas para ocultarlo.
+- El manifiesto `.openai/hosting.json` ahora permite empaquetado local del frontend sin `project_id` ni bindings. No es el manifiesto original recuperado y no autoriza publicación. Antes del piloto, verificar build desde un checkout limpio; no inventar identidad, saltar pruebas ni confundir el artefacto estático con el backend de Pages.
 
 - Sin permisos de escritura de producción, sin mutaciones de D1 ni acceso R2 desde la ejecución autónoma.
 - Sin `secrets` de pago ni claves de acceso a Cloudflare en agentes que analicen contenido no confiable de issues o pull requests.

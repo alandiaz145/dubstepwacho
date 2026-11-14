@@ -36,13 +36,17 @@ npm run test:sites
 npm audit --audit-level=high
 ```
 
-El build y la prueba de empaquetado Sites requieren el manifiesto original `.openai/hosting.json`, actualmente ausente del repositorio. Vite compila, pero el empaquetado completo sigue bloqueado hasta recuperar su configuración aprobada. No inventar un identificador de Site ni omitir la prueba para ocultar el fallo.
+El manifiesto `.openai/hosting.json` declara el frontend estático local, sin `project_id` ni bindings productivos. El build prepara los artefactos Sites sin crear ni desplegar un Site. No es la configuración original recuperada, no despliega las Pages Functions y no acredita que el backend esté disponible en otro hosting. Una publicación futura requiere identidad real y configuración revisada.
 
 `test:security` incluye pruebas con SQLite real y requiere los artefactos del build para la comprobación Sites. `test:runtime` ejecuta los handlers reales en Miniflare/workerd con D1/R2 efímeros locales: aplica las migraciones sólo a esa base aislada y comprueba cuentas, sesiones, subida privada, moderación, auditoría, EPs y streaming. El veredicto de análisis limpio es una simulación explícita de fixture; el escáner real sigue pendiente. Intercepta Turnstile y correo; no requiere credenciales, no envía correos y no accede a producción. El adaptador de rutas en `tests/runtime/` es sólo de pruebas y no se publica.
 
 `test:browser` inicia su propio Vite y prueba Chromium con APIs interceptadas y audio WAV sintético. Requiere Chromium instalado en `/usr/bin/chromium` o configurar `DW_CHROMIUM_PATH`. Comprueba teclado del diálogo de ingreso y reproducción, pausa, avance, recuperación de audio temporalmente no disponible y continuidad; no es una prueba de MP3 real ni de Safari.
 
 Estas verificaciones no sustituyen un ensayo con los bindings productivos ni las pruebas manuales de reproducción y avance en Safari iPhone. Para comprobaciones externas de sólo lectura existe `npm run check:public`; no autoriza escrituras ni pruebas de carga.
+
+## Respaldo y lanzamiento
+
+`npm run verify:backup -- /ruta/export.sql /ruta/recuentos.json` comprueba una exportación propia en memoria, sin conectar a Cloudflare ni mostrar registros. Ver [procedimiento de respaldo D1](docs/d1-backup-runbook.md) y [validaciones externas pendientes](docs/release-validation.md). El respaldo productivo independiente sigue pendiente; no confundir una prueba sintética con evidencia de producción.
 
 ## Continuidad
 

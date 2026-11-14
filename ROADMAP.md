@@ -6,6 +6,12 @@ Estado al 14 de noviembre de 2026. Este documento separa lo implementado de lo q
 
 ### Ciclo del 14 de noviembre de 2026 — propuesta en rama para revisión
 
+- Cierre de preparación autorizado: `npm ci`, build, seguridad **89/89**, Sites **4/4**, runtime Cloudflare **3/3**, navegador **6/6** y auditoría npm sin vulnerabilidades. El bloqueo local de empaquetado quedó resuelto con un manifiesto estático sin asociar; no se recuperó una identidad original ni se creó/desplegó un Site, y no se configuró allí el backend Pages.
+- Revisión técnica interna del PR completada y documentada en `docs/pr-2-review.md`; no sustituye revisión independiente. Se corrigió estado de cuenta obsoleto después de recuperación, con regresión Chromium. No hubo merge ni despliegue.
+- Preparado `npm run verify:backup` con restauración sólo en memoria, restricciones SQL, hash de bytes originales, integridad, claves foráneas, esquema base y comparación de recuentos. Cuatro pruebas sintéticas pasan. Procedimiento en `docs/d1-backup-runbook.md`; no se obtuvo ni verificó un backup productivo.
+- Acceso real de Cloudflare bloqueado: variables de credenciales ausentes y Wrangler no instalado. Se solicitó ubicación/entorno de una exportación o credencial temporal, sin pedir valores secretos. Migraciones 0003–0006 continúan pendientes. Safari físico/MP3 autorizado, remitente/Turnstile y escáner privado requieren los pasos de `docs/release-validation.md`.
+- Comprobación externa de sólo lectura intentada: los cuatro endpoints fallaron por conexión (`fetch failed`). No hay validación productiva actual ni evidencia de despliegue de este PR. Las pruebas locales no habilitan cuentas o subidas.
+
 - Verificación actual: navegador Chromium 5/5 (cuatro escenarios y contenedor), controlador de audio 5/5, runtime Cloudflare 3/3, suite de seguridad 84/85 y Sites 3/4. Único fallo en artefactos del empaquetado preexistente; Vite compila y build completo sigue bloqueado por manifiesto ausente. npm audit reporta cero vulnerabilidades tras incorporar playwright-core.
 
 - Reproductor: inicio invocado directamente desde la acción del usuario, sin esperar un efecto de React; controlador invalida promesas anteriores al cambiar de pista o pausar. Un rechazo antiguo no altera el estado nuevo y una restricción de autoplay ofrece reintento explícito. Cinco regresiones del controlador correctas.
