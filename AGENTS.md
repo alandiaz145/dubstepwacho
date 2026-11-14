@@ -12,6 +12,8 @@
 
 For account, D1, R2 or streaming changes, run `npm run test:runtime` on Node.js 24 as well as the existing suites. This uses isolated local Miniflare/workerd bindings and synthetic data, never production credentials or live email. Keep the test-only route adapter under `tests/runtime/` out of deployment bundles.
 
+For frontend playback or dialog changes, also run `npm run test:browser`. It uses playwright-core with installed Chromium (`DW_CHROMIUM_PATH` overrides `/usr/bin/chromium`), a local Vite server, intercepted APIs and synthetic WAV audio. It is not an iPhone Safari or real MP3 compatibility check.
+
 Run the local server yourself and open the preview in the browser available to this environment. Do not give the user server-start instructions when you can run it.
 
 Before making substantial visual changes, use the Product Design plugin's `get-context` skill when the visual source is unclear or no longer matches the current goal. When the user gives durable prototype-specific design feedback, preferences, or decisions, record them in `AGENTS.md`.

@@ -10,7 +10,8 @@
     "test:sites": "node --test tests/sites-worker.test.mjs",
     "test:security": "node --test tests/*.test.mjs",
     "check:public": "node scripts/check-public-endpoints.mjs",
-    "test:runtime": "node --test tests/runtime/*.test.mjs"
+    "test:runtime": "node --test tests/runtime/*.test.mjs",
+    "test:browser": "node --test tests/browser/*.test.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-react": "5.0.4",
@@ -19,7 +20,8 @@
     "vite": "6.4.6"
   },
   "devDependencies": {
-    "miniflare": "4.20260730.0"
+    "miniflare": "4.20260730.0",
+    "playwright-core": "1.65.1"
   },
   "overrides": {
     "miniflare": {
