@@ -82,20 +82,24 @@ export const verifyPassword = async (password, salt, expected) => {
   for(let i=0;i<actual.length;i++) difference |= actual[i] ^ target[i];
   return difference === 0;
 };
-export const createSession = async (db, userId) => {
+export const createSession = async (db, userId, credentials) => {
+  if(!credentials?.hash||!credentials?.salt)return null;
   const token = hex(bytes(32));
   const now=Math.floor(Date.now()/1000);
-  await db.batch([
+  const results=await db.batch([
+    // Revalidate credentials in the transaction so a completed reset wins over stale logins.
     // Bound active sessions per account; remove expired and oldest sessions.
-    db.prepare(`DELETE FROM sessions WHERE user_id=? AND (
+    db.prepare(`DELETE FROM sessions WHERE user_id=? AND EXISTS (
+      SELECT 1 FROM users WHERE id=? AND password_hash=? AND password_salt=? AND email_verified_at IS NOT NULL) AND (
       expires_at<=? OR token_hash IN (
         SELECT token_hash FROM sessions WHERE user_id=? AND expires_at>?
         ORDER BY created_at DESC,token_hash DESC LIMIT -1 OFFSET 9))`)
-      .bind(userId,now,userId,now),
-    db.prepare('INSERT INTO sessions (token_hash,user_id,expires_at) VALUES (?,?,?)')
-      .bind(await digest(token),userId,now+SESSION_SECONDS)
+      .bind(userId,userId,credentials.hash,credentials.salt,now,userId,now),
+    db.prepare(`INSERT INTO sessions (token_hash,user_id,expires_at)
+      SELECT ?,id,? FROM users WHERE id=? AND password_hash=? AND password_salt=? AND email_verified_at IS NOT NULL`)
+      .bind(await digest(token),now+SESSION_SECONDS,userId,credentials.hash,credentials.salt)
   ]);
-  return token;
+  return results[1].meta?.changes===1?token:null;
 };
 export const sessionCookie = token => `dw_session=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${SESSION_SECONDS}`;
 export const deleteCookie = 'dw_session=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0';
