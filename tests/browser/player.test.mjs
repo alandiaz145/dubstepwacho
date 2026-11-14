@@ -66,6 +66,21 @@ test('local Chromium verifies dialog keyboard controls and actual synthetic play
         assert.equal(await trigger.evaluate(element=>element===document.activeElement),true);
       }finally{await page.close();}
     });
+    await t.test('password recovery clears the stale account and administrative navigation',async()=>{
+      const page=await pageFor(0);
+      try{
+        await page.route('**/api/auth/me',route=>route.fulfill({json:{user:{id:'test-admin',displayName:'Test Admin',role:'admin'}}}));
+        await page.route('**/api/auth/reset',route=>route.fulfill({json:{message:'Synthetic recovery completed'}}));
+        await page.goto(`${base}/?reset=${'a'.repeat(64)}`);
+        await page.getByRole('button',{name:'Test Admin · Salir',exact:true}).waitFor();
+        await page.getByLabel('Contraseña nueva',{exact:true}).fill('synthetic-new-passphrase');
+        await page.getByRole('button',{name:'Guardar contraseña',exact:true}).click();
+        await page.locator('.header-actions').getByRole('button',{name:'Ingresar',exact:true}).waitFor();
+        assert.equal(await page.getByRole('button',{name:'Test Admin · Salir',exact:true}).count(),0);
+        assert.equal(await page.getByRole('button',{name:'Administración',exact:true}).count(),0);
+        assert.equal(new URL(page.url()).searchParams.has('reset'),false);
+      }finally{await page.close();}
+    });
     await t.test('play, pause, resume, demos, seeking and next track reflect the real audio element',async()=>{
       const page=await pageFor();
       try{
