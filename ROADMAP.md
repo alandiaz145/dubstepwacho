@@ -18,7 +18,7 @@ Actualizado el 14 de noviembre de 2026. Resultados locales; no acreditan funcion
 
 ## Continuación local — carga inicial y accesibilidad
 
-- Rama `perf/defer-secondary-panels`, basada en el PR #4: EPs y moderación se descargan al abrirlos, con espera accesible y recuperación explícita por recarga si falla el chunk. Portadas lejanas se aplazan; imagen principal y reproductor conservan carga inmediata. Las fuentes existentes se descubren desde HTML.
+- PR [#5](https://github.com/alandiaz145/dubstepwacho/pull/5), en borrador, rama `perf/defer-secondary-panels`, basada en el PR #4: EPs y moderación se descargan al abrirlos, con espera accesible y recuperación explícita por recarga si falla el chunk. Portadas lejanas se aplazan; imagen principal y reproductor conservan carga inmediata. Las fuentes existentes se descubren desde HTML.
 - JavaScript de entrada: 234.599 → 229.651 bytes (aproximadamente −2,1%); gzip 73,37 → 72,19 KB. No es una medición de latencia ni rendimiento productivo. Capturas locales con fuentes externas interceptadas idénticas en escritorio/móvil; arte sin cambios. Detalle en [frontend-performance.md](docs/frontend-performance.md).
 - Nombres accesibles explícitos para búsquedas/filtros, tema de prueba y cierre de cola; movimiento reducido respetado. No se habilitó comunidad persistente.
 - Build correcto; Chromium 29/29, seguridad 99/99, runtime local 3/3 y Sites 4/4. El navegador ahora incluye preview del build y requiere compilar antes de ejecutar la suite. Sin dependencias nuevas, migraciones ni despliegue.
