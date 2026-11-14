@@ -1,10 +1,15 @@
 # DubstepWacho — etapas de lanzamiento
 
-Estado al 13 de noviembre de 2026. Este documento separa lo implementado de lo que aún no es seguro abrir al público.
+Estado al 14 de noviembre de 2026. Este documento separa lo implementado de lo que aún no es seguro abrir al público.
 
 ## Registro del ciclo autónomo actual
 
 ### Ciclo del 14 de noviembre de 2026 — propuesta en rama para revisión
+
+- Resultado de la continuación: `npm run test:security` 62/63 correctas; único fallo en empaquetado Sites. `npm run test:sites` 3/4 correctas. Vite compila; `npm run build` sigue fallando por el manifiesto ausente. Siete regresiones nuevas correctas. Sin verificación de producción.
+- Continuación: límite real de 13 MiB + 64 KiB para el cuerpo multipart antes de parsearlo, sin confiar sólo en Content-Length. La recepción exige además capacidad de borrado R2; la limpieza intenta ambos objetos aunque una eliminación lance un error síncrono. Cinco pruebas cubren stream excesivo, formulario inválido, bandera cerrada sin lectura, envío sintético en cuarentena y fallo de transacción. Si R2 rechaza el borrado puede quedar un objeto huérfano privado; falta reconciliación operativa antes de habilitar subidas.
+- Enlaces de cuenta retirados de la URL al abrirlos (incluso si son inválidos), conservando parámetros ajenos, fragmento y estado del historial. Tokens válidos permanecen en memoria; no se realiza confirmación automática. Política no-referrer incorporada. Dos regresiones verifican extracción, duplicados y limpieza; falta comprobar el flujo completo en navegador.
+- Recuperación del hosting investigada en historial Git, archivos locales y listado de Sites: sin configuración original ni instancia identificable de DubstepWacho. No se creó ni reutilizó otro sitio. Continúa el bloqueo de empaquetado; recuperar el manifiesto aprobado o decidir explícitamente la configuración futura.
 
 - Base inspeccionada: `main` en `9ab01e9`; cambios propuestos mediante PR, sin commits directos a `main`, merge ni despliegue.
 - Lector JSON compartido endurecido: límite de 8192 bytes aplicado durante la lectura, cancelación del stream al excederlo, UTF-8 estricto y rechazo de `null`, arrays y valores primitivos. Evita errores internos en autenticación y moderación y lectura completa de solicitudes excesivas sin Content-Length. Cuatro regresiones verifican límites exactos, caracteres multibyte, cancelación y HTTP 400 en login/recuperación.

@@ -2,6 +2,9 @@
 
 ## Estado actual (prelanzamiento)
 
+- Enlaces de recuperación/verificación: el frontend retira los parámetros secretos de la URL al abrir la página y los conserva en memoria para la confirmación explícita. La política `no-referrer` impide enviar referencias desde el documento. Esto no elimina el token de solicitudes iniciales ni de registros de infraestructura previos; no registrar URLs de recuperación en analítica ni logs. Validación integral en navegador pendiente.
+- Subidas privadas: el cuerpo multipart tiene límite de bytes real (13 MiB + 64 KiB), independiente del encabezado Content-Length. Los límites individuales siguen en 10 MiB para MP3 y 3 MiB para portada. Tras fallo de persistencia se intenta borrar ambos objetos; un fallo de R2 puede dejar objetos huérfanos privados que requieren reconciliación operativa antes de habilitar recepción.
+
 - Las solicitudes JSON de cuentas y decisiones de moderación se limitan a 8192 bytes durante la lectura del stream; se cancela el cuerpo excesivo y se rechazan UTF-8 inválido, arrays, `null` y valores primitivos con HTTP 400. Esta verificación es local y no acredita despliegue productivo.
 
 - `AUTH_ENABLED` no está activado: no se admiten registros ni sesiones públicas.
