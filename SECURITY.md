@@ -2,6 +2,9 @@
 
 ## Estado actual (prelanzamiento)
 
+- Reenvío y recuperación en la interfaz conservan respuestas genéricas y requieren configuración habilitada y un desafío Turnstile fresco. Cada intento y cambio de diálogo descarta el token anterior; expiración y errores del widget bloquean el envío. Pruebas Chromium usan desafíos y correo simulados, sin alterar banderas del servidor.
+- HTTP 401 en consultas/acciones administrativas o subidas limpia la cuenta visible y vuelve al ingreso. HTTP 403 administrativo elimina canciones e historial de la interfaz y muestra pérdida de permisos; las respuestas de consultas anteriores quedan invalidadas. El servidor sigue siendo la autoridad de permisos; la limpieza de interfaz no revoca copias ya recibidas.
+
 - Recuperación completada ahora limpia también la cuenta de la interfaz y su navegación administrativa, coherente con la revocación de sesiones del servidor; regresión Chromium correcta.
 - Verificador de exports preparado en `scripts/verify-d1-backup.mjs`: opera sólo en memoria, no tiene cliente Cloudflare, restringe operaciones SQL y reporta únicamente metadatos/hash/recuentos. Su éxito no prueba el origen del archivo ni la independencia del almacenamiento. Ver `docs/d1-backup-runbook.md`. El respaldo productivo independiente sigue sin obtenerse/verificarse y las migraciones 0003–0006 permanecen pendientes.
 - Manifiesto de empaquetado local incorporado sin identidad de Site y sin bindings. Un build correcto del frontend no despliega ni configura las Pages Functions, ni autoriza publicar o activar cuentas.

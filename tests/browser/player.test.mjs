@@ -58,7 +58,7 @@ test('local Chromium verifies dialog keyboard controls and actual synthetic play
         await close.waitFor();
         assert.equal(await close.evaluate(element=>element===document.activeElement),true);
         await page.keyboard.press('Shift+Tab');
-        assert.equal(await page.getByRole('button',{name:'Olvidé mi contraseña',exact:true}).evaluate(element=>element===document.activeElement),true);
+        assert.equal(await page.getByRole('button',{name:'Reenviar verificación',exact:true}).evaluate(element=>element===document.activeElement),true);
         await page.keyboard.press('Tab');
         assert.equal(await close.evaluate(element=>element===document.activeElement),true);
         await page.keyboard.press('Escape');
