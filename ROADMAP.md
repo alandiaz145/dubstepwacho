@@ -1,74 +1,86 @@
-# DubstepWacho — etapas de lanzamiento
+# DubstepWacho — estado y tareas
 
-Estado al 13 de noviembre de 2026. Este documento separa lo implementado de lo que aún no es seguro abrir al público.
+Actualizado el 14 de noviembre de 2026. Resultados locales; no acreditan funcionamiento productivo. El [registro histórico](docs/development-log-2026-11-14.md) conserva los ciclos anteriores y sus bloqueos ya resueltos.
 
-## Registro del ciclo autónomo actual
+## Trabajo propuesto para revisión
 
-- Cloudflare D1 real inspeccionado en `dubstepwacho-db`: actualmente existen las tablas iniciales `users`, `sessions`, `auth_attempts`, `artist_profiles`, `tracks` y `moderation_events`; `users` carece de `email_verified_at`. Se obtuvo bookmark Time Travel del estado previo, sin modificar registros. El respaldo independiente sigue pendiente: la consola visual no ofrece exportación SQL, y este entorno no tiene credenciales de API/Wrangler configuradas. No ejecutar `ALTER TABLE` ni otras migraciones antes de exportar y verificar el backup. Las seis migraciones se ejecutaron con éxito en SQLite local en el orden 0001–0006; no equivalen a su aplicación en D1 productivo.
-- Reglas de continuidad incorporadas en `AGENTS.md`; el repositorio `main` sigue siendo la referencia y no se alteró la identidad visual.
-- Endurecidos los enlaces de verificación de correo y recuperación de contraseña: la transacción revalida el token vigente para impedir que dos solicitudes paralelas utilicen el mismo enlace. Tests de regresión añadidos.
-- Sesiones acotadas a 10 por usuario, con eliminación de sesiones vencidas y creación transaccional; prueba automatizada añadida.
-- Verificación externa de sólo lectura disponible con `npm run check:public`: comprueba configuración, catálogo, acceso privado e índice EP. Ejecutada correctamente; el índice EP continúa en HTTP 503 hasta aplicar la migración.
-- Las decisiones de moderación ahora revalidan estado y análisis limpio dentro de la transacción D1, y sólo auditan cambios efectivos; impide que dos moderadores pisen una transición más reciente. Prueba de conflicto añadida.
-- Pruebas adicionales con SQLite real (`node:sqlite`, Node 24) verifican que aprobación y publicación se auditen una vez, que las decisiones tardías respondan 409 y que un fallo de auditoría revierta el cambio de estado.
-- Evitada una carrera de interfaz en el archivo EP: al cambiar rápidamente de volumen, sólo la última consulta puede actualizar las canciones visibles. Pendiente de prueba con volúmenes públicos reales después de aplicar `0005`.
-- Mejoradas etiquetas accesibles del menú, navegación activa, controles de transporte, repetición, cola y expansión del reproductor. Falta una auditoría manual con lector de pantalla y Safari iPhone.
-- Preparado `AUTOMATION.md` con el diseño de agentes programados, ramas, pruebas, permisos mínimos y revisión. **Ninguna automatización fue activada.**
-- Prueba externa confirmada: la interfaz administrativa más reciente se desplegó en `dubstepwacho.pages.dev` y `/api/eps/` devolvía HTTP 503 por migración aún pendiente. Las APIs de cuentas permanecen cerradas.
-- Bloqueos sin eludir: migraciones D1 `0003`–`0005` (acceso Cloudflare), Turnstile y correo real, escáner privado de MP3, reglas del EP, prueba física Safari iPhone y decisiones de cobro.
-- Pruebas de SQLite real para límites por IP/operación, reinicio de ventana de 15 minutos, aislamiento entre usuarios y máximo de diez sesiones; sin ataques ni tráfico de carga contra producción.
-- Limpieza incremental y acotada (256 registros antiguos por ejecución muestreada) de `auth_attempts` preparada, con índice en migración `0006_auth_attempts_maintenance.sql` y prueba local SQLite. Falta aplicar también `0006` antes de abrir cuentas.
-- Corregido un fallo de integración de la radio: el catálogo entrega `/api/tracks/audio/:id`, pero la cola sólo aceptaba URL HTTPS absolutas. Ahora admite exclusivamente esas rutas públicas validas y orígenes HTTPS; salta pistas fallidas y corta al agotar las opciones, sin bucles. Tests de regresión añadidos; falta prueba con MP3 real autorizado.
-- Endpoints públicos reforzados: el listado devuelve `503` si falta D1 y construye cada ficha con campos permitidos explícitos (nunca claves de R2 ni correos internos); audio y portada sin clave válida responden `404` sin acceder a R2, y streaming sin API de metadatos responde `503`. Regresiones agregadas para los tres casos. Verificación local: 50 pruebas de seguridad, build y 4 pruebas de empaquetado Sites correctas; pendiente despliegue automático y validación externa.
-- Mejorada la accesibilidad de las ventanas de ingreso, recuperación y subida: semántica de diálogo modal, nombre accesible y botón de cierre etiquetado; foco inicial, ciclo de Tab/Shift+Tab, cierre con Escape y restitución de foco al control anterior. 50 pruebas de seguridad, compilación y 4 pruebas Sites correctas. La prueba automatizada con navegador quedó bloqueada: el Chromium instalado no pudo iniciarse (`socket() failed: Operation not permitted`); requiere prueba en un navegador con permisos de ejecución.
-- Próxima tarea independiente recomendada: comprobar el foco y los formularios modales en navegador real, probar accesibilidad del reproductor y verificar despliegue después del commit. Próxima tarea externa bloqueada: instalar las migraciones `0003`–`0006` y verificar los bindings de Cloudflare antes de habilitar cualquier función privada.
+- `main` sigue en `9ab01e9`. PR [#2](https://github.com/alandiaz145/dubstepwacho/pull/2): seguridad de cuentas, concurrencia, límites de solicitudes/subidas, streaming privado, pruebas de runtime y reproductor, empaquetado local y verificación offline de respaldos. Listo para revisión humana; sin merge.
+- PR [#3](https://github.com/alandiaz145/dubstepwacho/pull/3), en borrador dependiente del #2, rama `feat/account-resend-and-ep-feedback`, basada en el PR #2: interfaz de reenvío de verificación y recuperación con respuestas persistentes, desafío nuevo tras cada intento o cambio de diálogo, estados de EP con cancelación y reintento, y eliminación de datos administrativos obsoletos ante HTTP 401/403. Las sesiones vencidas en moderación o subida vuelven al ingreso. Conserva estilos, arte y banderas cerradas.
+- Validación local de esta rama: build correcto, seguridad 89/89, Sites 4/4, runtime Cloudflare 3/3, Chromium 22/22 y npm audit sin vulnerabilidades reportadas. Datos sintéticos, correo y Turnstile interceptados; sin archivos privados ni credenciales productivas.
+- El PR de continuación apunta a `main` y depende del #2: revisar primero el #2 y volver a comprobar el diff restante después de su merge. Ningún PR se fusiona automáticamente.
 
-## Base pública (implementada)
+## Continuación local — evidencia de análisis e inventario
 
-- Sitio responsive con catálogo conceptual, artistas, foro de demostración y sección EP colectivo Vol. 1.
-- D1 para cuentas y moderación; R2 privado para archivos en cuarentena.
-- Panel de moderación y bloqueo de aprobación sin veredicto de análisis limpio.
-- Reproductor con cola y avance automático; catálogo público filtrado por `published + clean` y audio con HTTP Range (206).
-- Protección del registro mediante Turnstile: clave pública servida sin revelar la secreta, widget visual y validación del servidor.
-- Tests automáticos de autenticación, publicación, subida y audio. No equivalen a pruebas manuales en iPhone.
-- Audio `HEAD` responde con metadatos/rangos sin descargar el cuerpo de R2; la implementación conserva streaming `206`.
+- PR [#4](https://github.com/alandiaz145/dubstepwacho/pull/4), en borrador, rama `feat/private-scan-result-validation`, dependiente del PR #3: validador puro de resultados que comprueba identidad/intento/versión, hashes/tamaños de ambos archivos, cronología y vigencia de firmas con política explícita. Un veredicto no limpio nunca produce `allClean`.
+- Comparador de inventarios sólo de recuentos: distingue faltantes, tamaños diferentes y objetos sin referencia, con período de gracia obligatorio. Sin adaptador D1/R2 ni capacidad de borrado.
+- Diez pruebas sintéticas nuevas. Build correcto, seguridad 99/99, runtime local 3/3 y Sites 4/4. No se modificó frontend; Chromium 22/22 corresponde al ciclo anterior.
+- Ambos módulos permanecen desconectados de rutas, escáneres y almacenamiento. Autenticación del ejecutor, transacción/idempotencia y conectores requieren otra implementación y revisión.
 
-## Antes de abrir el registro (bloqueantes)
+## Continuación local — carga inicial y accesibilidad
 
-1. **Verificación de correo**: la migración `0003_email_verification.sql`, el enlace de una hora, la comprobación, el reenvío limitado y el bloqueo de sesiones sin confirmar ya están desarrollados. La recuperación de contraseña, revocación de sesiones y migración `0004_password_reset.sql` también están preparadas. Falta aplicar las migraciones, decidir/verificar remitente transaccional y probar entrega real y casos extremos.
-2. **Turnstile real**: crear widget para `dubstepwacho.pages.dev`, guardar `TURNSTILE_SECRET_KEY` en secretos, configurar `TURNSTILE_SITE_KEY`, comprobar desafíos reales y medir falsos positivos. Mantener `AUTH_ENABLED` desactivado hasta entonces.
-3. **Seguridad de sesiones y roles**: pruebas de expiración, cierre de sesión, revocación y acceso indebido. Revisión de límites de IP y protección Cloudflare WAF contra exceso de solicitudes.
-4. **Políticas visibles**: privacidad, condiciones de uso, denuncias de derechos, edad mínima y contacto de soporte. Evitar formularios que prometan enviar datos mientras sean ilustrativos.
+- Rama `perf/defer-secondary-panels`, basada en el PR #4: EPs y moderación se descargan al abrirlos, con espera accesible y recuperación explícita por recarga si falla el chunk. Portadas lejanas se aplazan; imagen principal y reproductor conservan carga inmediata. Las fuentes existentes se descubren desde HTML.
+- JavaScript de entrada: 234.599 → 229.651 bytes (aproximadamente −2,1%); gzip 73,37 → 72,19 KB. No es una medición de latencia ni rendimiento productivo. Capturas locales con fuentes externas interceptadas idénticas en escritorio/móvil; arte sin cambios. Detalle en [frontend-performance.md](docs/frontend-performance.md).
+- Nombres accesibles explícitos para búsquedas/filtros, tema de prueba y cierre de cola; movimiento reducido respetado. No se habilitó comunidad persistente.
+- Build correcto; Chromium 29/29, seguridad 99/99, runtime local 3/3 y Sites 4/4. El navegador ahora incluye preview del build y requiere compilar antes de ejecutar la suite. Sin dependencias nuevas, migraciones ni despliegue.
 
-## Antes de recibir y publicar MP3 (bloqueantes)
+## Prioridad 1 — cuentas y recuperación
 
-1. Integrar escáner privado de malware para audio e imágenes y registrar resultado firmado en D1; si el escáner falla, no aprobar.
-2. Limitar tamaño, frecuencia, almacenamiento y costo, incluyendo cuentas de prueba y archivos corruptos.
-3. Permitir a moderadores revisar metadatos, derechos y archivos limpios. El panel administrativo ya usa los endpoints autenticados de D1; publica/retira y registra el evento en una única transacción. Incluye una vista privada de las 50 últimas decisiones. Falta una prueba end-to-end con D1/R2 y moderadores reales.
-4. Probar reproducción real, avance, pausa y cola en Chrome/Firefox y Safari iPhone con archivos autorizados.
+Preparados: verificación de correo, reenvío, recuperación con revocación de sesiones, límites por IP/operación, sesiones acotadas y transacciones contra carreras. El frontend conserva errores accesibles y renueva desafíos consumidos o vencidos.
 
-## EP colectivo — primera edición
+Pendientes:
 
-- La estructura D1 de volúmenes y repertorios está preparada en `0005_ep_volumes.sql` (todavía no aplicada). Sólo se consultan volúmenes marcados `published` y canciones publicadas con análisis limpio. El archivo aparece en la web cuando exista una edición real.
-- Definir fecha de convocatoria, cantidad de temas, criterios, equipo que selecciona, licencias y territorios.
-- Formularios para inscribirse, enviar demo privado y confirmar créditos/licencias antes de publicar.
-- Página de cada volumen con artistas, lista de canciones, artwork y archivo de ediciones mensuales.
-- Evitar publicar material enviado a concurso antes de la autorización específica del artista.
+- Respaldo SQL independiente y restauración comprobada de `dubstepwacho-db`; después, revisión del plan de migraciones 0003–0006. No ejecutar migraciones de producción antes del respaldo.
+- Vinculación efectiva de credencial temporal en un entorno autorizado: la configuración quedó pausada por pedido del usuario. No pedir que repita el proceso mientras se puedan completar tareas locales.
+- Remitente y dominio de correo, widget Turnstile real y ensayo integral de entrega, expiración, reenvío, recuperación y acceso con cuentas controladas.
+- Limpieza de URL, confirmación explícita, tokens inválidos/duplicados y reintento tras fallo de red verificados en Chromium. Pendiente auditoría con lector de pantalla y entrega real.
+- Revisión independiente de seguridad y pruebas reales de límites/costos antes de considerar `AUTH_ENABLED`.
 
-## Comunidad y sostenibilidad (fases posteriores)
+## Prioridad 2 — MP3 privados y moderación
 
-- Feedback por tema con moderación, reportes y antispam; comentarios anónimos sólo con límites rigurosos.
-- Perfiles verificables de productores, colaboraciones, mapa regional sin revelar ubicación privada, comunidad WhatsApp opt-in.
-- Marketplace para samples, stems, presets y servicios: términos de licencias no exclusivas, comisiones y entrega segura.
-- Donaciones transparentes y cuadro de costos de transferencia y almacenamiento, tras elegir procesador de pagos.
-- Foro persistente, notificaciones y soporte; monitoreo de tráfico, errores y consumo de Cloudflare.
+Preparados: cuarentena R2, límites de bytes y frecuencia, roles/origen, aprobación únicamente tras análisis limpio, publicación/retirada transaccional e historial privado. Runtime local cubre todo el circuito con veredictos simulados.
 
-## Decisiones para revisar con Alan a las 12:00
+Pendientes:
 
-- Servicio de verificación de correo y dominio remitente.
-- Escáner de malware privado (servicio aislado o proveedor externo, con privacidad de material inédito).
-- Condiciones de participación y calendario del EP Vol. 1.
-- Política de pagos, comisión del marketplace y moneda de cobro.
-- Prueba manual de Safari iPhone con uno o más MP3 expresamente autorizados.
+- Contrato propuesto en [private-scanner-contract.md](docs/private-scanner-contract.md): aislamiento, hashes, autenticación, idempotencia y reconciliación. Revisar e implementar; sin proveedor activo ni gasto autorizado.
+- Reconciliación de objetos huérfanos, retención, borrado y presupuestos de almacenamiento/transferencia.
+- Ensayo con moderadores reales, derechos declarados, archivos corruptos y límites de consumo.
+- Mantener `UPLOADS_ENABLED` apagado y no distribuir obras inéditas ni enviarlas a servicios públicos de análisis.
 
-Ninguna de estas decisiones bloquea seguir trabajando en pruebas y diseño. No contratar recursos pagos ni activar registros o subidas públicas por anticipado.
+## Prioridad 3 — reproductor y compatibilidad
+
+Preparados: reproducción desde gesto del usuario, cola/avance, reintento, control de promesas obsoletas y streaming Range/HEAD; pruebas Chromium con WAV sintético.
+
+Pendientes:
+
+- MP3 expresamente autorizados en Chrome, Firefox y Safari iPhone físico: inicio, pausa, reanudación, avance, cola, cambios de red y retirada.
+- Lector de pantalla, navegación móvil y medición de rendimiento/consumo con catálogo real.
+- No presentar la prueba Chromium como compatibilidad Safari ni publicar audio de muestra sin permiso.
+
+## Prioridad 4 — EPs, artistas y comunidad
+
+Preparados: esquema 0005 de volúmenes y repertorios, lecturas públicas filtradas y archivo con carga/error/vacío/reintento; respuestas antiguas no sobrescriben la selección reciente.
+
+Pendientes:
+
+- EP Vol. 1: reglas, fechas, cupos, selección, créditos, licencias, territorios y autorización de distribución; decisiones artísticas de Alan.
+- Inscripción y demos privados una vez listo el circuito de cuentas/cuarentena, confirmación de créditos/licencias y páginas de volúmenes con artwork aprobado.
+- Perfiles verificables, colaboraciones y enlaces de artista respaldados por datos persistentes.
+- Foro persistente, feedback por tema, denuncias, moderación, antispam, notificaciones y soporte. La demostración actual no representa un servicio persistente.
+- Mapa regional sin ubicación privada y WhatsApp voluntario: requieren reglas de privacidad y enlaces oficiales.
+
+## Prioridad 5 — sostenibilidad, accesibilidad y automatización
+
+- Privacidad, condiciones, edad mínima, contacto y denuncias de derechos: preparar implementación; contenido legal/comercial requiere aprobación.
+- Marketplace de samples/stems/presets/servicios: licencias, comisiones, moneda y entrega segura pendientes; sin cobros habilitados.
+- Donaciones y costos transparentes tras elegir procesador y autorizar gastos.
+- Rendimiento móvil, carga de imágenes, accesibilidad y regresiones de errores/red: trabajo local autorizado que puede continuar sin abrir cuentas.
+- Automatización: arquitectura GitHub Actions documentada en [AUTOMATION.md](AUTOMATION.md), presupuesto inicial USD 0, permisos mínimos y PR con revisión. No activar workflows, cron, credenciales ni servicios pagos sin autorización específica.
+
+## Próximas tareas locales
+
+1. Completar pruebas de accesibilidad y errores de red en formularios restantes, conservando las banderas cerradas.
+2. Revisar estados de error y cancelación de otras lecturas privadas, sin ampliar permisos.
+3. Medir LCP, consumo y fuentes reales en un entorno de prueba autorizado; contrastar con la medición local de tamaños ya documentada. La prueba física de Safari y lector de pantalla sigue pendiente.
+4. Probar la futura transición de análisis con SQLite aislado: consumo idempotente, estado vigente y rollback de auditoría. No incorporar endpoints ni mecanismos para otorgar `clean` hasta revisar la autenticación del ejecutor.
+
+Los bloqueos externos no impiden estas tareas. La publicación permanece sujeta a revisión humana, respaldo verificado y validación real descrita en [release-validation.md](docs/release-validation.md).

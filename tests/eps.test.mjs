@@ -9,7 +9,9 @@ test('EP archive exposes only explicitly published volumes',async()=>{
   const result=await list({env:{DB:db}});
   assert.equal((await result.json()).volumes.length,1);
   assert.match(seen[0],/status='published'/);
-  assert.deepEqual(await list({env:{}}).then(r=>r.json()),{volumes:[]});
+  const unavailable=await list({env:{}});
+  assert.equal(unavailable.status,503);
+  assert.deepEqual(await unavailable.json(),{volumes:[]});
 });
 
 test('EP detail never exposes unapproved or unscanned tracks',async()=>{

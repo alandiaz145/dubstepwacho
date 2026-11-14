@@ -34,5 +34,5 @@ export default function TurnstileWidget({siteKey,onToken}) {
       onTokenRef.current('');
     };
   },[siteKey]);
-  return <div className="turnstile-box"><div ref={container}/><small>Protección contra registros automáticos mediante Cloudflare Turnstile.</small></div>;
+  return <div className="turnstile-box"><div ref={container}/><small>Verificación de seguridad mediante Cloudflare Turnstile.</small></div>;
 }

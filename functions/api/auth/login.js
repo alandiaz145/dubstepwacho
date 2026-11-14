@@ -12,6 +12,7 @@ export async function onRequestPost({request,env}) {
   // Spend comparable work when the account is absent to reduce email enumeration.
   const ok=await verifyPassword(input.password,user?.password_salt||'00'.repeat(16),user?.password_hash||'00'.repeat(32));
   if(!user||!ok||!user.email_verified_at) return response({error:'Credenciales inválidas o correo sin verificar.'},401);
-  const token=await createSession(env.DB,user.id);
+  const token=await createSession(env.DB,user.id,{hash:user.password_hash,salt:user.password_salt});
+  if(!token)return response({error:'Credenciales inválidas o correo sin verificar.'},401);
   return response({user:{id:user.id,email:user.email,displayName:user.display_name,role:user.role}},200,{'Set-Cookie':sessionCookie(token)});
 }
