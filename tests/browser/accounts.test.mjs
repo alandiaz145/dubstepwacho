@@ -135,6 +135,42 @@ test('account email forms preserve safety gates, fresh challenges and accessible
         assert.equal(await f.page.getByRole('button',{name:'Test Artist · Salir',exact:true}).count(),0);
       }finally{await f.page.close();}
     });
+    for(const kind of ['verify','reset'])await t.test(`${kind} links scrub the URL, require confirmation and support a failed-request retry`,async()=>{
+      const f=await fixture(),token='a'.repeat(64),calls=[];let fail=true;
+      try{
+        await f.page.route(`**/api/auth/${kind}`,route=>{
+          calls.push(route.request().postDataJSON());
+          return fail?route.abort('failed'):route.fulfill({json:{message:'Operación de prueba completada.'}});
+        });
+        await f.page.goto(`${base}/?campaign=test&${kind}=${token}#account`);
+        const dialog=f.page.getByRole('dialog',{name:kind==='verify'?'Confirmá tu correo':'Nueva contraseña',exact:true});
+        await dialog.waitFor();
+        assert.equal(f.page.url(),`${base}/?campaign=test#account`);
+        assert.equal(calls.length,0);
+        assert.equal(await f.page.locator('body').innerText().then(text=>text.includes(token)),false);
+        if(kind==='reset')await dialog.getByLabel('Contraseña nueva',{exact:true}).fill('synthetic-new-passphrase');
+        const submit=dialog.getByRole('button',{name:kind==='verify'?'Confirmar correo':'Guardar contraseña',exact:true});
+        await submit.click();await dialog.getByRole('status').waitFor();
+        assert.equal(calls.length,1);assert.equal(calls[0].token,token);
+        fail=false;await submit.click();
+        await f.page.getByRole('dialog',{name:'Ingresar',exact:true}).waitFor();
+        assert.equal(calls.length,2);assert.equal(calls[1].token,token);
+        if(kind==='reset')assert.equal(calls[1].password,'synthetic-new-passphrase');
+        await f.page.reload();await f.page.locator('.header-actions').getByRole('button',{name:'Ingresar',exact:true}).waitFor();
+        assert.equal(await f.page.getByRole('dialog').count(),0);
+        assert.equal(calls.length,2);
+      }finally{await f.page.close();}
+    });
+    await t.test('malformed and duplicate link tokens are removed without opening an account operation',async()=>{
+      const f=await fixture();
+      try{
+        for(const query of ['verify=invalid&reset=invalid',`verify=${'b'.repeat(64)}&verify=${'c'.repeat(64)}`]){
+          await f.page.goto(`${base}/?campaign=test&${query}#account`);
+          await f.page.waitForURL(`${base}/?campaign=test#account`);
+          assert.equal(await f.page.getByRole('dialog').count(),0);
+        }
+      }finally{await f.page.close();}
+    });
     await t.test('login errors remain inside the named dialog and keyboard controls cover account forms',async()=>{
       const f=await fixture();
       try{

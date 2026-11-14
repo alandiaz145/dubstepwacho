@@ -5,8 +5,8 @@ Actualizado el 14 de noviembre de 2026. Resultados locales; no acreditan funcion
 ## Trabajo propuesto para revisión
 
 - `main` sigue en `9ab01e9`. PR [#2](https://github.com/alandiaz145/dubstepwacho/pull/2): seguridad de cuentas, concurrencia, límites de solicitudes/subidas, streaming privado, pruebas de runtime y reproductor, empaquetado local y verificación offline de respaldos. Listo para revisión humana; sin merge.
-- Rama `feat/account-resend-and-ep-feedback`, basada en el PR #2: interfaz de reenvío de verificación y recuperación con respuestas persistentes, desafío nuevo tras cada intento o cambio de diálogo, estados de EP con cancelación y reintento, y eliminación de datos administrativos obsoletos ante HTTP 401/403. Las sesiones vencidas en moderación o subida vuelven al ingreso. Conserva estilos, arte y banderas cerradas.
-- Validación local de esta rama: build correcto, seguridad 89/89, Sites 4/4, runtime Cloudflare 3/3, Chromium 19/19 y npm audit sin vulnerabilidades reportadas. Datos sintéticos, correo y Turnstile interceptados; sin archivos privados ni credenciales productivas.
+- PR [#3](https://github.com/alandiaz145/dubstepwacho/pull/3), en borrador dependiente del #2, rama `feat/account-resend-and-ep-feedback`, basada en el PR #2: interfaz de reenvío de verificación y recuperación con respuestas persistentes, desafío nuevo tras cada intento o cambio de diálogo, estados de EP con cancelación y reintento, y eliminación de datos administrativos obsoletos ante HTTP 401/403. Las sesiones vencidas en moderación o subida vuelven al ingreso. Conserva estilos, arte y banderas cerradas.
+- Validación local de esta rama: build correcto, seguridad 89/89, Sites 4/4, runtime Cloudflare 3/3, Chromium 22/22 y npm audit sin vulnerabilidades reportadas. Datos sintéticos, correo y Turnstile interceptados; sin archivos privados ni credenciales productivas.
 - El PR de continuación apunta a `main` y depende del #2: revisar primero el #2 y volver a comprobar el diff restante después de su merge. Ningún PR se fusiona automáticamente.
 
 ## Prioridad 1 — cuentas y recuperación
@@ -18,7 +18,7 @@ Pendientes:
 - Respaldo SQL independiente y restauración comprobada de `dubstepwacho-db`; después, revisión del plan de migraciones 0003–0006. No ejecutar migraciones de producción antes del respaldo.
 - Vinculación efectiva de credencial temporal en un entorno autorizado: la configuración quedó pausada por pedido del usuario. No pedir que repita el proceso mientras se puedan completar tareas locales.
 - Remitente y dominio de correo, widget Turnstile real y ensayo integral de entrega, expiración, reenvío, recuperación y acceso con cuentas controladas.
-- Validación en navegador de limpieza de URL de enlaces de cuenta y auditoría con lector de pantalla.
+- Limpieza de URL, confirmación explícita, tokens inválidos/duplicados y reintento tras fallo de red verificados en Chromium. Pendiente auditoría con lector de pantalla y entrega real.
 - Revisión independiente de seguridad y pruebas reales de límites/costos antes de considerar `AUTH_ENABLED`.
 
 ## Prioridad 2 — MP3 privados y moderación
@@ -27,7 +27,7 @@ Preparados: cuarentena R2, límites de bytes y frecuencia, roles/origen, aprobac
 
 Pendientes:
 
-- Diseñar e integrar escáner privado de MP3 y portada: hashes, motor/versión, resultados autenticados, reanálisis y rechazo ante fallos. Sin proveedor activo ni gasto autorizado.
+- Contrato propuesto en [private-scanner-contract.md](docs/private-scanner-contract.md): aislamiento, hashes, autenticación, idempotencia y reconciliación. Revisar e implementar; sin proveedor activo ni gasto autorizado.
 - Reconciliación de objetos huérfanos, retención, borrado y presupuestos de almacenamiento/transferencia.
 - Ensayo con moderadores reales, derechos declarados, archivos corruptos y límites de consumo.
 - Mantener `UPLOADS_ENABLED` apagado y no distribuir obras inéditas ni enviarlas a servicios públicos de análisis.
@@ -64,9 +64,9 @@ Pendientes:
 
 ## Próximas tareas locales
 
-1. Cubrir enlaces de cuenta completos en Chromium, incluidos tokens inválidos, limpieza de URL y errores de red.
+1. Completar pruebas de accesibilidad y errores de red en formularios restantes, conservando las banderas cerradas.
 2. Revisar estados de error y cancelación de otras lecturas privadas, sin ampliar permisos.
 3. Medir carga inicial e imágenes y corregir mejoras técnicas que preserven la identidad visual.
-4. Preparar un contrato técnico del escáner privado y reconciliación, sin conectarlo a producción ni terceros.
+4. Derivar del contrato del escáner un validador puro de resultados y pruebas sintéticas; sin endpoint ni conexiones a producción o terceros.
 
 Los bloqueos externos no impiden estas tareas. La publicación permanece sujeta a revisión humana, respaldo verificado y validación real descrita en [release-validation.md](docs/release-validation.md).
