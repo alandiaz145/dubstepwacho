@@ -30,7 +30,7 @@ async function serveAudio({request,env,params},headOnly=false) {
   const headers=new Headers({
     'Content-Type':'audio/mpeg',
     'Accept-Ranges':'bytes',
-    'Cache-Control':'public, max-age=300',
+    'Cache-Control':'no-store',
     'X-Content-Type-Options':'nosniff'
   });
   if(range===false){headers.set('Content-Range',`bytes */${head.size}`);return new Response(null,{status:416,headers});}

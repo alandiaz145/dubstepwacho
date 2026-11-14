@@ -10,7 +10,7 @@ export async function onRequestGet({env,params}) {
   if(!cover?.body)return new Response('Not found',{status:404});
   return new Response(cover.body,{headers:{
     'Content-Type':track.cover_key.endsWith('.png')?'image/png':'image/jpeg',
-    'Cache-Control':'public, max-age=300',
+    'Cache-Control':'no-store',
     'X-Content-Type-Options':'nosniff'
   }});
 }
